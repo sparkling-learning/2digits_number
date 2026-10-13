@@ -1,16 +1,17 @@
 /* ==========================================================================
-   全裝置響應式樣式：每次3行滾動 + 字體放大10% + 十位個位靠緊
+   全裝置響應式樣式：數柱/數粒圖像化 + 3行滾動 + 間距縮緊
    ========================================================================== */
 :root {
-  --tens-color: #1565c0;      /* 深藍色：十位數 */
-  --ones-color: #d32f2f;      /* 鮮紅色：個位數 */
-  --tens-bg: #e3f2fd;
-  --ones-bg: #ffebee;
+  --tens-color: #0d47a1;      /* 深藍色：十位數 */
+  --ones-color: #c62828;      /* 鮮紅色：個位數 */
+  --tens-bg: #e3f2fd;        /* 淡藍色方塊底色 */
+  --ones-bg: #ffebee;        /* 淡紅色方塊底色 */
+  --tens-rod-color: #1976d2;  /* 積木條藍色 */
+  --ones-cube-color: #e53935; /* 積木顆紅色 */
   --main-bg: #f0f4f8;
   --btn-green: #2e7d32;
   --board-bg: #ffffff;
   
-  /* 3 行的高度計算基準：每行高度約 72px，加上間距 */
   --row-height: 72px;
   --grid-gap: 6px;
 }
@@ -55,7 +56,7 @@ html, body {
 }
 
 .app-title {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
   color: #1e293b;
   font-weight: 800;
 }
@@ -84,7 +85,7 @@ html, body {
   color: white;
 }
 
-/* 視圖面板 */
+/* 視圖面板切換 */
 .view-panel {
   display: none;
   flex: 1;
@@ -106,7 +107,7 @@ html, body {
 }
 
 .view-hint, .quiz-counter {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
   color: #334155;
 }
@@ -124,7 +125,7 @@ html, body {
 .back-btn { background: #64748b; color: white; }
 
 /* ==========================================================================
-   百格圖：每次顯示 3 行，下捲滾動顯示另外 3 行
+   百格圖：每次顯示 3 行
    ========================================================================== */
 .scroll-window-container {
   flex: 1;
@@ -142,7 +143,6 @@ html, body {
 .hundred-board {
   width: 100%;
   max-width: 820px;
-  /* 精準限制高度為 3 行數字 + 間距，其餘行需要下捲 */
   height: calc((var(--row-height) * 3) + (var(--grid-gap) * 2));
   max-height: 100%;
   display: grid;
@@ -152,25 +152,14 @@ html, body {
   overflow-y: auto;
   overflow-x: hidden;
   scroll-behavior: smooth;
-  /* 滾動對齊：幼兒下捲時每次能以 3 行為單位平穩停駐 */
   scroll-snap-type: y mandatory;
   padding-right: 4px;
 }
 
-/* 自訂捲軸：大而清晰，方便幼兒手指滑動或視覺辨識 */
-.hundred-board::-webkit-scrollbar {
-  width: 10px;
-}
-.hundred-board::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 10px;
-}
-.hundred-board::-webkit-scrollbar-thumb {
-  background: #94a3b8;
-  border-radius: 10px;
-}
+.hundred-board::-webkit-scrollbar { width: 10px; }
+.hundred-board::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+.hundred-board::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 10px; }
 
-/* 百格圖內的每一格 */
 .board-cell {
   background: #f8fafc;
   border: 2px solid #cbd5e1;
@@ -188,34 +177,25 @@ html, body {
   background-color: #e2e8f0;
 }
 
-/* 數字字體放大 10% (由 1.15rem 增至 1.28rem) */
 .digit-wrapper {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: clamp(1.15rem, 2.5vmin, 1.45rem); /* 比原版放大 10% */
+  font-size: clamp(1.15rem, 2.5vmin, 1.45rem);
   font-weight: 900;
-  letter-spacing: -2px; /* 縮減間距，使十位與個位靠得更近 */
+  letter-spacing: -2px;
 }
 
-/* 十位與個位顏色 */
-.num-tens {
-  color: var(--tens-color);
-  margin-right: -2px; /* 負 Margin：讓十位與個位更加靠近 */
-}
-.num-ones {
-  color: var(--ones-color);
-  margin-left: -2px;
-}
+.num-tens { color: var(--tens-color); margin-right: -2px; }
+.num-ones { color: var(--ones-color); margin-left: -2px; }
 
-/* 進階純數字模式：去除顏色提示 */
 .hard-mode .num-tens,
 .hard-mode .num-ones {
   color: #1e293b !important;
 }
 
 /* ==========================================================================
-   認讀挑戰視圖 (字體放大 10% 且靠近)
+   認讀挑戰視圖 (單一「下一題」按鈕)
    ========================================================================== */
 .quiz-stage {
   flex: 1;
@@ -242,11 +222,10 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
-  /* 字體放大 10% (由 7.5rem 提升至 8.25rem) */
   font-size: clamp(5.5rem, 16.5vmin, 8.25rem);
   font-weight: 900;
   box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-  letter-spacing: -6px; /* 大數字間距同步縮緊 */
+  letter-spacing: -6px;
 }
 
 .quiz-control-area {
@@ -274,7 +253,7 @@ html, body {
 }
 
 /* ==========================================================================
-   彈窗與高亮動畫
+   彈窗：淡藍色數柱 (1條10粒) 與 淡紅色數粒 (1個1粒)
    ========================================================================== */
 .modal-layer {
   display: none;
@@ -288,28 +267,31 @@ html, body {
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  padding: 16px;
+  padding: 12px;
 }
 
 .modal-layer.active {
   display: flex;
 }
 
-.inspect-box, .finish-box {
+.inspect-box {
   background: white;
   width: 100%;
-  max-width: 440px;
+  max-width: 520px;
   border-radius: 24px;
-  padding: 24px;
+  padding: 16px 20px;
   text-align: center;
   position: relative;
   box-shadow: 0 16px 36px rgba(0,0,0,0.25);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .modal-close-btn {
   position: absolute;
-  top: 12px;
-  right: 16px;
+  top: 10px;
+  right: 14px;
   font-size: 2rem;
   background: none;
   border: none;
@@ -318,17 +300,15 @@ html, body {
 }
 
 .inspect-big-digits {
-  /* 放大 10% (由 7.5rem 增至 8.25rem) */
-  font-size: clamp(5.5rem, 22vmin, 8.25rem);
+  font-size: clamp(4.5rem, 16vmin, 6.5rem);
   font-weight: 900;
-  line-height: 1.1;
-  margin: 10px 0;
+  line-height: 1;
+  margin-bottom: 8px;
   display: flex;
   justify-content: center;
-  letter-spacing: -6px; /* 緊靠在一起 */
+  letter-spacing: -6px;
 }
 
-/* 依序高亮效果 */
 .num-tens, .num-ones {
   display: inline-block;
   padding: 0 4px;
@@ -343,38 +323,123 @@ html, body {
   box-shadow: 0 0 16px rgba(253, 224, 71, 0.85);
 }
 
-.inspect-tags {
+/* 具象積木圖像展示容器 */
+.manipulatives-container {
   display: flex;
-  justify-content: center;
+  width: 100%;
   gap: 12px;
   margin-bottom: 12px;
+  justify-content: center;
 }
 
-.inspect-pill {
-  font-size: 1rem;
+.cpa-block {
+  flex: 1;
+  border-radius: 18px;
+  padding: 10px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 3px solid transparent;
+  transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
+  min-height: 160px;
+}
+
+/* 淡藍色方塊 (十位) */
+.block-tens {
+  background-color: var(--tens-bg);
+  border-color: #bbdefb;
+}
+
+/* 淡紅色方塊 (個位) */
+.block-ones {
+  background-color: var(--ones-bg);
+  border-color: #ffcdd2;
+}
+
+.cpa-block.block-active {
+  transform: scale(1.05);
+  border-color: #f59e0b;
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.4);
+}
+
+.cpa-label {
+  font-size: 1.05rem;
+  font-weight: 800;
+  margin-bottom: 6px;
+}
+
+.block-tens .cpa-label { color: var(--tens-color); }
+.block-ones .cpa-label { color: var(--ones-color); }
+
+.cpa-sub-label {
+  font-size: 0.8rem;
+  color: #64748b;
   font-weight: 700;
-  padding: 6px 14px;
-  border-radius: 16px;
-  opacity: 0.35;
-  transition: opacity 0.3s;
+  margin-top: 6px;
 }
 
-.inspect-pill.pill-active { opacity: 1; }
-.pill-tens { background: var(--tens-bg); color: var(--tens-color); }
-.pill-ones { background: var(--ones-bg); color: var(--ones-color); }
+/* 十位：數柱 (Tens Rods) 區域 */
+.rods-grid {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  min-height: 96px;
+  flex-wrap: wrap;
+}
+
+/* 單條數柱 (內含 10 粒微型積木) */
+.rod-pillar {
+  width: 14px;
+  height: 90px;
+  background-color: var(--tens-rod-color);
+  border-radius: 3px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1px 0;
+  box-shadow: 1px 2px 4px rgba(0,0,0,0.15);
+}
+
+.rod-unit-dot {
+  width: 100%;
+  height: 7px;
+  border-bottom: 1px solid rgba(255,255,255,0.45);
+}
+
+/* 個位：數粒 (Unit Cubes) 區域 */
+.cubes-grid {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 140px;
+  min-height: 96px;
+}
+
+/* 單顆獨立數粒 (1個1粒) */
+.cube-unit {
+  width: 16px;
+  height: 16px;
+  background-color: var(--ones-cube-color);
+  border-radius: 3px;
+  box-shadow: 1px 2px 4px rgba(0,0,0,0.15);
+  border: 1px solid rgba(255,255,255,0.6);
+}
 
 .inspect-guide {
   font-size: 1.15rem;
-  color: #64748b;
+  color: #334155;
   font-weight: bold;
-  margin-bottom: 14px;
+  margin-bottom: 12px;
 }
 
 .inspect-audio-btn {
   border: none;
   background: #2563eb;
   color: white;
-  padding: 12px 24px;
+  padding: 10px 24px;
   font-size: 1.1rem;
   font-weight: bold;
   border-radius: 20px;
@@ -382,6 +447,16 @@ html, body {
 }
 
 /* 通關彈窗 */
+.finish-box {
+  background: white;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 24px;
+  padding: 24px;
+  text-align: center;
+  box-shadow: 0 16px 36px rgba(0,0,0,0.25);
+}
+
 .finish-badge { font-size: 4.5rem; margin-bottom: 10px; }
 .finish-title { font-size: 1.8rem; color: #1e293b; margin-bottom: 10px; }
 .finish-desc { font-size: 1.2rem; color: #475569; margin-bottom: 24px; line-height: 1.4; }
