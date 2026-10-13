@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>雙位數積木認讀大冒險</title>
+  <title>雙位數積木認讀</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app-wrapper">
-    <!-- 頂部列：標題與難度分級切換 -->
+    <!-- 頂部列：雙層次難度切換 -->
     <header class="top-nav">
-      <h1 class="app-title">🔢 雙位數認讀樂園</h1>
+      <h1 class="app-title">🔢 雙位數認讀</h1>
       <div class="diff-switch">
         <button id="btn-easy" class="mode-btn active">初階 (色彩與圖像)</button>
         <button id="btn-hard" class="mode-btn">進階 (純數字)</button>
       </div>
     </header>
 
-    <!-- 第一頁：百格圖探索 (每次顯示3行) -->
+    <!-- 第一頁：百格圖 (每次顯示3行) -->
     <section id="view-grid" class="view-panel active">
       <div class="view-toolbar">
         <span class="view-hint">👇 每次看 3 行，下捲看更多！點選觀察積木</span>
@@ -38,29 +38,28 @@
       <div class="quiz-stage">
         <p class="quiz-instruction">請大聲讀出這個數字：</p>
         
-        <!-- 認讀大卡片 -->
+        <!-- 認讀數字卡片 (字體放大10%、十位個位緊靠) -->
         <div id="quiz-number-box" class="quiz-big-card">
           <span id="quiz-t" class="num-tens">0</span><span id="quiz-o" class="num-ones">0</span>
         </div>
 
-        <!-- 僅保留單一「下一題」按鈕 -->
+        <!-- 認讀數字下方：僅保留單一「下一題」大按鈕 -->
         <div class="quiz-control-area">
           <button id="btn-next-question" class="single-next-btn">下一題 ➔</button>
         </div>
       </div>
     </section>
 
-    <!-- 彈窗：點選數字放大展示 (純視覺高亮與數柱/數粒，無語音朗讀) -->
+    <!-- 彈窗：放大數字 + 淡藍色十位數柱 + 淡紅色個位數粒 (5粒一行) -->
     <div id="inspect-modal" class="modal-layer">
       <div class="inspect-box">
         <button id="btn-close-inspect" class="modal-close-btn" aria-label="關閉">×</button>
         
-        <!-- 放大數字 -->
         <div class="inspect-big-digits">
           <span id="inspect-t" class="num-tens">0</span><span id="inspect-o" class="num-ones">0</span>
         </div>
 
-        <!-- 蒙特梭利十進制數柱與數粒展示區 -->
+        <!-- 蒙特梭利位值積木展示區 -->
         <div class="manipulatives-container">
           <!-- 淡藍色方塊：展示十位數柱 (一條 10 粒) -->
           <div id="block-tens" class="cpa-block block-tens">
@@ -69,11 +68,11 @@
             <div class="cpa-sub-label">（1 條有 10 粒）</div>
           </div>
 
-          <!-- 淡紅色方塊：展示個位數粒 (一個 1 粒) -->
+          <!-- 淡紅色方塊：展示個位數粒 (5粒一行，滿5粒才轉下行) -->
           <div id="block-ones" class="cpa-block block-ones">
             <div class="cpa-label">個位：<span id="val-ones-txt">0</span> 個一</div>
-            <div id="ones-cubes-canvas" class="cubes-grid"></div>
-            <div class="cpa-sub-label">（1 個有 1 粒）</div>
+            <div id="ones-cubes-canvas" class="cubes-grid-5"></div>
+            <div class="cpa-sub-label">（5 粒一行，滿行才換行）</div>
           </div>
         </div>
 
@@ -87,7 +86,7 @@
       <div class="finish-box">
         <div class="finish-badge">🏆</div>
         <h2 class="finish-title">恭喜完成挑戰！</h2>
-        <p class="finish-desc">你成功完成了 10 題雙位數認讀！欣賞你的專注與勇氣，你真是一位不怕困難的小勇士！🌟</p>
+        <p class="finish-desc">你成功完成了 10 題雙位數認讀！欣賞你的專注和努力！🌟</p>
         <button id="btn-restart-game" class="single-next-btn">🔄 再玩一次</button>
       </div>
     </div>
