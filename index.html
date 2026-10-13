@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>雙位數百格冒險 - 數柱與數粒具象學習</title>
+  <title>雙位數積木認讀大冒險</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app-wrapper">
-    <!-- 頂部導航列 -->
+    <!-- 頂部列：標題與難度分級切換 -->
     <header class="top-nav">
-      <h1 class="app-title">🔢 雙位數積木認讀樂園</h1>
+      <h1 class="app-title">🔢 雙位數認讀樂園</h1>
       <div class="diff-switch">
         <button id="btn-easy" class="mode-btn active">初階 (色彩與圖像)</button>
         <button id="btn-hard" class="mode-btn">進階 (純數字)</button>
@@ -20,7 +20,7 @@
     <!-- 第一頁：百格圖探索 (每次顯示3行) -->
     <section id="view-grid" class="view-panel active">
       <div class="view-toolbar">
-        <span class="view-hint">👇 每次看 3 行，下捲看更多數字！點選觀察積木</span>
+        <span class="view-hint">👇 每次看 3 行，下捲看更多！點選觀察積木</span>
         <button id="btn-to-quiz" class="action-btn link-btn">挑戰認讀 ➔</button>
       </div>
 
@@ -38,54 +38,56 @@
       <div class="quiz-stage">
         <p class="quiz-instruction">請大聲讀出這個數字：</p>
         
+        <!-- 認讀大卡片 -->
         <div id="quiz-number-box" class="quiz-big-card">
           <span id="quiz-t" class="num-tens">0</span><span id="quiz-o" class="num-ones">0</span>
         </div>
 
+        <!-- 僅保留單一「下一題」按鈕 -->
         <div class="quiz-control-area">
           <button id="btn-next-question" class="single-next-btn">下一題 ➔</button>
         </div>
       </div>
     </section>
 
-    <!-- 彈窗：放大數字 + 淡藍色十位數柱 + 淡紅色個位數粒 -->
+    <!-- 彈窗：點選數字放大展示 (純視覺高亮與數柱/數粒，無語音朗讀) -->
     <div id="inspect-modal" class="modal-layer">
       <div class="inspect-box">
         <button id="btn-close-inspect" class="modal-close-btn" aria-label="關閉">×</button>
         
-        <!-- 巨型放大數字 -->
+        <!-- 放大數字 -->
         <div class="inspect-big-digits">
           <span id="inspect-t" class="num-tens">0</span><span id="inspect-o" class="num-ones">0</span>
         </div>
 
-        <!-- 蒙特梭利十進制數柱/數粒圖像區 -->
+        <!-- 蒙特梭利十進制數柱與數粒展示區 -->
         <div class="manipulatives-container">
-          <!-- 淡藍色方塊：展示十位數柱 (一條10粒) -->
+          <!-- 淡藍色方塊：展示十位數柱 (一條 10 粒) -->
           <div id="block-tens" class="cpa-block block-tens">
             <div class="cpa-label">十位：<span id="val-tens-txt">0</span> 個十</div>
             <div id="tens-rods-canvas" class="rods-grid"></div>
-            <div class="cpa-sub-label">（每條有 10 粒）</div>
+            <div class="cpa-sub-label">（1 條有 10 粒）</div>
           </div>
 
-          <!-- 淡紅色方塊：展示個位數粒 (一個1粒) -->
+          <!-- 淡紅色方塊：展示個位數粒 (一個 1 粒) -->
           <div id="block-ones" class="cpa-block block-ones">
             <div class="cpa-label">個位：<span id="val-ones-txt">0</span> 個一</div>
             <div id="ones-cubes-canvas" class="cubes-grid"></div>
-            <div class="cpa-sub-label">（每顆是 1 粒）</div>
+            <div class="cpa-sub-label">（1 個有 1 粒）</div>
           </div>
         </div>
 
-        <p id="inspect-status-text" class="inspect-guide">正在觀察積木...</p>
-        <button id="btn-read-again" class="inspect-audio-btn">🔊 再聽一次</button>
+        <p id="inspect-status-text" class="inspect-guide">請小朋友大聲讀出來！</p>
+        <button id="btn-replay-anim" class="inspect-action-btn">✨ 重新展示</button>
       </div>
     </div>
 
-    <!-- 通關讚賞彈窗 (正向教育成長型思維) -->
+    <!-- 最終通關讚賞彈窗 (正向教育成長型思維) -->
     <div id="finish-modal" class="modal-layer">
       <div class="finish-box">
         <div class="finish-badge">🏆</div>
         <h2 class="finish-title">恭喜完成挑戰！</h2>
-        <p class="finish-desc">你成功完成了 10 題認讀！欣賞你的專注與勇氣，你真是一位不怕困難的小勇士！🌟</p>
+        <p class="finish-desc">你成功完成了 10 題雙位數認讀！欣賞你的專注與勇氣，你真是一位不怕困難的小勇士！🌟</p>
         <button id="btn-restart-game" class="single-next-btn">🔄 再玩一次</button>
       </div>
     </div>
