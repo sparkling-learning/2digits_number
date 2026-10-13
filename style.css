@@ -1,5 +1,5 @@
 /* ==========================================================================
-   全裝置響應式樣式：數柱/數粒圖像化 + 3行滾動 + 間距縮緊
+   全裝置響應式樣式：每次3行滾動 + 視覺積木 + 字體放大10% + 緊縮間距
    ========================================================================== */
 :root {
   --tens-color: #0d47a1;      /* 深藍色：十位數 */
@@ -41,7 +41,7 @@ html, body {
   padding: env(safe-area-inset-top, 8px) env(safe-area-inset-right, 8px) env(safe-area-inset-bottom, 8px) env(safe-area-inset-left, 8px);
 }
 
-/* 頂部列 */
+/* 頂部導航列 */
 .top-nav {
   height: 48px;
   display: flex;
@@ -85,7 +85,7 @@ html, body {
   color: white;
 }
 
-/* 視圖面板切換 */
+/* 頁面切換控制 */
 .view-panel {
   display: none;
   flex: 1;
@@ -125,7 +125,7 @@ html, body {
 .back-btn { background: #64748b; color: white; }
 
 /* ==========================================================================
-   百格圖：每次顯示 3 行
+   百格圖：每次顯示 3 行，滾動顯示另外 3 行
    ========================================================================== */
 .scroll-window-container {
   flex: 1;
@@ -195,7 +195,7 @@ html, body {
 }
 
 /* ==========================================================================
-   認讀挑戰視圖 (單一「下一題」按鈕)
+   認讀挑戰視圖 (單一「下一題」大按鈕)
    ========================================================================== */
 .quiz-stage {
   flex: 1;
@@ -279,7 +279,7 @@ html, body {
   width: 100%;
   max-width: 520px;
   border-radius: 24px;
-  padding: 16px 20px;
+  padding: 18px 20px;
   text-align: center;
   position: relative;
   box-shadow: 0 16px 36px rgba(0,0,0,0.25);
@@ -372,7 +372,7 @@ html, body {
 .block-ones .cpa-label { color: var(--ones-color); }
 
 .cpa-sub-label {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: #64748b;
   font-weight: 700;
   margin-top: 6px;
@@ -435,7 +435,7 @@ html, body {
   margin-bottom: 12px;
 }
 
-.inspect-audio-btn {
+.inspect-action-btn {
   border: none;
   background: #2563eb;
   color: white;
