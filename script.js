@@ -1,19 +1,19 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // --- 狀態控制 ---
+  // --- 狀態管理 ---
   let isHardMode = false;
   let currentStep = 1;
   let targetNumber = 10;
   let questionPool = [];
 
-  // 音訊合成器 (支援跨裝置離線低延遲提示聲)
+  // 輕量音效合成器 (提供溫和的介面點擊回饋，無人聲朗讀)
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  function playTone(freq, type, duration) {
+  function playBeep(freq, type, duration) {
     if (audioCtx.state === "suspended") audioCtx.resume();
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.type = type;
     osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
     osc.connect(gain);
     gain.connect(audioCtx.destination);
@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const onesCubesCanvas = document.getElementById("ones-cubes-canvas");
 
   const inspectStatusText = document.getElementById("inspect-status-text");
-  const btnReadAgain = document.getElementById("btn-read-again");
+  const btnReplayAnim = document.getElementById("btn-replay-anim");
 
   // 挑戰模式節點
   const quizNum = document.getElementById("quiz-num");
@@ -56,19 +56,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const finishModal = document.getElementById("finish-modal");
   const btnRestartGame = document.getElementById("btn-restart-game");
 
-  // Web Speech API 語音朗讀
-  function speakWord(text) {
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      const utt = new SpeechSynthesisUtterance(text);
-      utt.lang = "zh-HK"; // 可換為 zh-TW
-      utt.rate = 0.8;
-      window.speechSynthesis.speak(utt);
-    }
-  }
-
   // ==========================================================================
-  // 1. 建構百格圖 (1-100)
+  // 1. 百格圖建構 (1-100)
   // ==========================================================================
   function renderHundredBoard() {
     boardEl.innerHTML = "";
@@ -125,9 +114,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 點選數字：放大並依序高亮（十位數柱 ➜ 個位數粒 ➜ 完整讀出）
+  // 點選數字：純視覺動態高亮（十位數柱 ➜ 個位數粒，無錄音播放）
   function inspectNumber(num) {
-    playTone(440, "sine", 0.1);
+    playBeep(440, "sine", 0.08);
     targetNumber = num;
     let t = Math.floor(num / 10);
     let o = num % 10;
@@ -138,11 +127,11 @@ document.addEventListener("DOMContentLoaded", () => {
     valTensTxt.textContent = t;
     valOnesTxt.textContent = o;
 
-    // 繪製蒙特梭利具象數柱與數粒
+    // 繪製具象數柱與數粒
     renderTensRods(t);
     renderOnesCubes(o);
 
-    // 重置動畫與高亮標記
+    // 重置高亮
     inspectT.classList.remove("pulse-active");
     inspectO.classList.remove("pulse-active");
     blockTens.classList.remove("block-active");
@@ -151,56 +140,52 @@ document.addEventListener("DOMContentLoaded", () => {
     inspectModal.classList.add("active");
 
     if (num >= 10) {
-      inspectStatusText.textContent = `十位是 ${t}，看淡藍色方塊！`;
-      // 0.3秒後：高亮十位與數柱
+      inspectStatusText.textContent = "請看淡藍色方塊：有幾條數柱？";
+      
+      // 第一階段：高亮十位
       setTimeout(() => {
         inspectT.classList.add("pulse-active");
         blockTens.classList.add("block-active");
-        playTone(330, "triangle", 0.2);
-        speakWord(`${t}個十，代表${t * 10}粒`);
-        inspectStatusText.textContent = `十位是 ${t}：有 ${t} 條數柱，每條 10 粒，代表 ${t * 10}！`;
+        playBeep(330, "triangle", 0.15);
+        inspectStatusText.textContent = `十位是 ${t}：代表 ${t} 條十粒 (${t * 10})`;
       }, 300);
 
-      // 1.8秒後：高亮個位與數粒
+      // 第二階段：高亮個位
       setTimeout(() => {
         inspectT.classList.remove("pulse-active");
         blockTens.classList.remove("block-active");
 
         inspectO.classList.add("pulse-active");
         blockOnes.classList.add("block-active");
-        playTone(660, "triangle", 0.2);
+        playBeep(660, "triangle", 0.15);
         if (o > 0) {
-          speakWord(`${o}個一，代表${o}粒`);
-          inspectStatusText.textContent = `個位是 ${o}：有 ${o} 顆數粒，每顆 1 粒，代表 ${o}！`;
+          inspectStatusText.textContent = `個位是 ${o}：代表 ${o} 個一粒 (${o})`;
         } else {
-          speakWord("0個一");
-          inspectStatusText.textContent = "個位是 0：沒有多出來的單粒！";
+          inspectStatusText.textContent = "個位是 0：代表 0 個一粒";
         }
       }, 2000);
 
-      // 3.5秒後：合讀
+      // 第三階段：提示朗讀
       setTimeout(() => {
         inspectO.classList.remove("pulse-active");
         blockOnes.classList.remove("block-active");
-        inspectStatusText.textContent = `合起來讀作：${num}`;
-        speakWord(`${num}`);
+        inspectStatusText.textContent = `合起來讀作：${num}，請小朋友大聲讀出來！`;
       }, 3600);
     } else {
       setTimeout(() => {
         inspectO.classList.add("pulse-active");
         blockOnes.classList.add("block-active");
-        playTone(660, "triangle", 0.2);
-        speakWord(`${num}個一`);
-        inspectStatusText.textContent = `個位是 ${num}：有 ${num} 顆數粒！`;
+        playBeep(660, "triangle", 0.15);
+        inspectStatusText.textContent = `個位是 ${num}：代表 ${num} 粒！請讀出數字`;
       }, 300);
     }
   }
 
   btnCloseInspect.addEventListener("pointerdown", () => inspectModal.classList.remove("active"));
-  btnReadAgain.addEventListener("pointerdown", () => inspectNumber(targetNumber));
+  btnReplayAnim.addEventListener("pointerdown", () => inspectNumber(targetNumber));
 
   // ==========================================================================
-  // 2. 模式切換與視圖切換
+  // 2. 模式切換與分頁
   // ==========================================================================
   function setDifficulty(hard) {
     isHardMode = hard;
@@ -219,14 +204,14 @@ document.addEventListener("DOMContentLoaded", () => {
   btnHard.addEventListener("pointerdown", () => setDifficulty(true));
 
   btnToQuiz.addEventListener("pointerdown", () => {
-    playTone(520, "sine", 0.1);
+    playBeep(520, "sine", 0.08);
     viewGrid.classList.remove("active");
     viewQuiz.classList.add("active");
     startQuiz();
   });
 
   btnToGrid.addEventListener("pointerdown", () => {
-    playTone(440, "sine", 0.1);
+    playBeep(440, "sine", 0.08);
     viewQuiz.classList.remove("active");
     viewGrid.classList.add("active");
   });
@@ -246,7 +231,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function presentQuestion() {
     if (currentStep > 10) {
-      playTone(784, "sine", 0.3);
+      playBeep(784, "sine", 0.3);
       finishModal.classList.add("active");
       return;
     }
@@ -257,7 +242,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   btnNextQuestion.addEventListener("pointerdown", () => {
-    playTone(587, "sine", 0.12);
+    playBeep(587, "sine", 0.1);
     currentStep++;
     presentQuestion();
   });
@@ -267,6 +252,6 @@ document.addEventListener("DOMContentLoaded", () => {
     startQuiz();
   });
 
-  // 初始繪製
+  // 繪製百格圖
   renderHundredBoard();
 });
