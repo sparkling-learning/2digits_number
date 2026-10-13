@@ -88,7 +88,23 @@ document.addEventListener("DOMContentLoaded", () => {
       boardEl.appendChild(cell);
     }
   }
-
+JavaScript
+// 計算 3 行的完整滾動高度（3個行高 + 3個行距）
+function scrollBoardByRows(rowCount = 3, direction = 1) {
+  const boardEl = document.getElementById("hundred-board");
+  if (!boardEl) return;
+  const firstCell = boardEl.querySelector(".board-cell");
+  if (!firstCell) return;
+  
+  const cellHeight = firstCell.getBoundingClientRect().height;
+  const computedGap = parseFloat(window.getComputedStyle(boardEl).rowGap) || 8;
+  const distance = (cellHeight + computedGap) * rowCount;
+  
+  boardEl.scrollBy({
+    top: distance * direction,
+    behavior: "smooth"
+  });
+}
   // 生成十位數柱 (一條 10 粒)
   function renderTensRods(count) {
     tensRodsCanvas.innerHTML = "";
