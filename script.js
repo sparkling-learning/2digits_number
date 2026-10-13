@@ -5,9 +5,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let targetNumber = 10;
   let questionPool = [];
 
-  // 音訊合成器 (確保離線與行動裝置均能穩定播放提示聲)
+  // 音訊合成器 (支援 iOS 與 Android 離線低延遲播放)
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  function playBeep(freq, type, duration) {
+  function playTone(freq, type, duration) {
     if (audioCtx.state === "suspended") audioCtx.resume();
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
@@ -21,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
     osc.stop(audioCtx.currentTime + duration);
   }
 
-  // --- DOM 節點 ---
+  // --- DOM 節點引用 ---
   const boardEl = document.getElementById("hundred-board");
   const viewGrid = document.getElementById("view-grid");
   const viewQuiz = document.getElementById("view-quiz");
@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnToQuiz = document.getElementById("btn-to-quiz");
   const btnToGrid = document.getElementById("btn-to-grid");
 
-  // 放大檢視彈窗節點
+  // 放大檢視彈窗
   const inspectModal = document.getElementById("inspect-modal");
   const btnCloseInspect = document.getElementById("btn-close-inspect");
   const inspectT = document.getElementById("inspect-t");
@@ -42,17 +42,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const inspectStatusText = document.getElementById("inspect-status-text");
   const btnReadAgain = document.getElementById("btn-read-again");
 
-  // 認讀挑戰節點
+  // 挑戰模式節點
   const quizNum = document.getElementById("quiz-num");
   const quizT = document.getElementById("quiz-t");
   const quizO = document.getElementById("quiz-o");
   const btnNextQuestion = document.getElementById("btn-next-question");
 
-  // 通關彈窗節點
+  // 通關彈窗
   const finishModal = document.getElementById("finish-modal");
   const btnRestartGame = document.getElementById("btn-restart-game");
 
-  // 廣東話/國語語音導讀輔助
+  // Web Speech API 語音朗讀
   function speakWord(text) {
     if ("speechSynthesis" in window) {
       window.speechSynthesis.cancel();
@@ -64,7 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================================================================
-  // 1. 百格圖建構 (1-100)
+  // 1. 建構百格圖 (1-100)，每格內十位與個位靠緊，字體放大10%
   // ==========================================================================
   function renderHundredBoard() {
     boardEl.innerHTML = "";
@@ -73,24 +73,33 @@ document.addEventListener("DOMContentLoaded", () => {
       cell.className = "board-cell";
 
       if (i < 10) {
-        cell.innerHTML = `<span class="num-ones">${i}</span>`;
+        cell.innerHTML = `
+          <div class="digit-wrapper">
+            <span class="num-ones">${i}</span>
+          </div>`;
       } else if (i === 100) {
-        cell.innerHTML = `<span class="num-tens">10</span><span class="num-ones">0</span>`;
+        cell.innerHTML = `
+          <div class="digit-wrapper">
+            <span class="num-tens">10</span><span class="num-ones">0</span>
+          </div>`;
       } else {
         const tens = Math.floor(i / 10);
         const ones = i % 10;
-        cell.innerHTML = `<span class="num-tens">${tens}</span><span class="num-ones">${ones}</span>`;
+        cell.innerHTML = `
+          <div class="digit-wrapper">
+            <span class="num-tens">${tens}</span><span class="num-ones">${ones}</span>
+          </div>`;
       }
 
-      // 支援觸控與滑鼠
+      // 支援觸控與滑鼠雙事件
       cell.addEventListener("pointerdown", () => inspectNumber(i));
       boardEl.appendChild(cell);
     }
   }
 
-  // 放大並依序高亮：十位 ➜ 個位 ➜ 完整引導
+  // 點選數字：放大並依序高亮（十位 ➜ 個位 ➜ 完整讀出）
   function inspectNumber(num) {
-    playBeep(440, "sine", 0.1);
+    playTone(440, "sine", 0.1);
     targetNumber = num;
     let t = Math.floor(num / 10);
     let o = num % 10;
@@ -101,7 +110,6 @@ document.addEventListener("DOMContentLoaded", () => {
     valTensTxt.textContent = t;
     valOnesTxt.textContent = o;
 
-    // 重置動畫與標籤
     inspectT.classList.remove("pulse-active");
     inspectO.classList.remove("pulse-active");
     pillTens.classList.remove("pill-active");
@@ -114,7 +122,7 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => {
         inspectT.classList.add("pulse-active");
         pillTens.classList.add("pill-active");
-        playBeep(330, "triangle", 0.2);
+        playTone(330, "triangle", 0.2);
         speakWord(`${t * 10}`);
         inspectStatusText.textContent = `十位是 ${t}，表示 ${t * 10}`;
       }, 300);
@@ -123,7 +131,7 @@ document.addEventListener("DOMContentLoaded", () => {
         inspectT.classList.remove("pulse-active");
         inspectO.classList.add("pulse-active");
         pillOnes.classList.add("pill-active");
-        playBeep(660, "triangle", 0.2);
+        playTone(660, "triangle", 0.2);
         if (o > 0) speakWord(`${o}`);
         inspectStatusText.textContent = `個位是 ${o}，表示 ${o}`;
       }, 1600);
@@ -137,7 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => {
         inspectO.classList.add("pulse-active");
         pillOnes.classList.add("pill-active");
-        playBeep(660, "triangle", 0.2);
+        playTone(660, "triangle", 0.2);
         speakWord(`${num}`);
         inspectStatusText.textContent = `這是個位數：${num}`;
       }, 300);
@@ -148,7 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
   btnReadAgain.addEventListener("pointerdown", () => inspectNumber(targetNumber));
 
   // ==========================================================================
-  // 2. 模式切換與分頁切換
+  // 2. 模式切換與視圖切換
   // ==========================================================================
   function setDifficulty(hard) {
     isHardMode = hard;
@@ -167,20 +175,20 @@ document.addEventListener("DOMContentLoaded", () => {
   btnHard.addEventListener("pointerdown", () => setDifficulty(true));
 
   btnToQuiz.addEventListener("pointerdown", () => {
-    playBeep(520, "sine", 0.1);
+    playTone(520, "sine", 0.1);
     viewGrid.classList.remove("active");
     viewQuiz.classList.add("active");
     startQuiz();
   });
 
   btnToGrid.addEventListener("pointerdown", () => {
-    playBeep(440, "sine", 0.1);
+    playTone(440, "sine", 0.1);
     viewQuiz.classList.remove("active");
     viewGrid.classList.add("active");
   });
 
   // ==========================================================================
-  // 3. 認讀挑戰 (僅手動按「下一題」按鈕)
+  // 3. 認讀挑戰邏輯 (共10題，手動按「下一題」推進)
   // ==========================================================================
   function startQuiz() {
     currentStep = 1;
@@ -194,7 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function presentQuestion() {
     if (currentStep > 10) {
-      playBeep(784, "sine", 0.3);
+      playTone(784, "sine", 0.3);
       finishModal.classList.add("active");
       return;
     }
@@ -206,7 +214,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 手動按下一題
   btnNextQuestion.addEventListener("pointerdown", () => {
-    playBeep(587, "sine", 0.12);
+    playTone(587, "sine", 0.12);
     currentStep++;
     presentQuestion();
   });
@@ -216,6 +224,6 @@ document.addEventListener("DOMContentLoaded", () => {
     startQuiz();
   });
 
-  // 初始化百格圖
+  // 初始化繪製
   renderHundredBoard();
 });
