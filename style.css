@@ -1,5 +1,5 @@
 /* ==========================================================================
-   全裝置響應式樣式：確保百格圖 1-100 完全自適應且永不裁切
+   全裝置響應式樣式：每次3行滾動 + 字體放大10% + 十位個位靠緊
    ========================================================================== */
 :root {
   --tens-color: #1565c0;      /* 深藍色：十位數 */
@@ -9,6 +9,10 @@
   --main-bg: #f0f4f8;
   --btn-green: #2e7d32;
   --board-bg: #ffffff;
+  
+  /* 3 行的高度計算基準：每行高度約 72px，加上間距 */
+  --row-height: 72px;
+  --grid-gap: 6px;
 }
 
 * {
@@ -17,7 +21,7 @@
   padding: 0;
   user-select: none;
   -webkit-user-select: none;
-  touch-action: manipulation; /* 允許正常觸控，但防止雙指縮放與延遲 */
+  touch-action: manipulation;
 }
 
 html, body {
@@ -28,7 +32,6 @@ html, body {
   overflow: hidden;
 }
 
-/* 撐滿整個視窗的核心容器 */
 .app-wrapper {
   width: 100vw;
   height: 100vh;
@@ -81,7 +84,7 @@ html, body {
   color: white;
 }
 
-/* 視圖切換面板 */
+/* 視圖面板 */
 .view-panel {
   display: none;
   flex: 1;
@@ -93,7 +96,6 @@ html, body {
   display: flex;
 }
 
-/* 面板工具列 */
 .view-toolbar {
   height: 44px;
   display: flex;
@@ -122,61 +124,98 @@ html, body {
 .back-btn { background: #64748b; color: white; }
 
 /* ==========================================================================
-   百格圖 (1-100) 容器與自適應網格
+   百格圖：每次顯示 3 行，下捲滾動顯示另外 3 行
    ========================================================================== */
-.grid-card-container {
+.scroll-window-container {
   flex: 1;
   background: var(--board-bg);
-  border-radius: 14px;
-  padding: 6px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  border: 3px solid #cbd5e1;
+  padding: 8px;
   display: flex;
   justify-content: center;
-  align-items: center;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  align-items: flex-start;
   overflow: hidden;
 }
 
 .hundred-board {
   width: 100%;
-  height: 100%;
-  max-width: 95vmin; /* 保證在直向手機與寬螢幕平板上皆等比例最大化 */
-  max-height: 95vmin;
+  max-width: 820px;
+  /* 精準限制高度為 3 行數字 + 間距，其餘行需要下捲 */
+  height: calc((var(--row-height) * 3) + (var(--grid-gap) * 2));
+  max-height: 100%;
   display: grid;
   grid-template-columns: repeat(10, 1fr);
-  grid-template-rows: repeat(10, 1fr);
-  gap: 3px;
+  grid-auto-rows: var(--row-height);
+  gap: var(--grid-gap);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+  /* 滾動對齊：幼兒下捲時每次能以 3 行為單位平穩停駐 */
+  scroll-snap-type: y mandatory;
+  padding-right: 4px;
 }
 
-/* 單個數字方格：大字體、圓角、可點選 */
+/* 自訂捲軸：大而清晰，方便幼兒手指滑動或視覺辨識 */
+.hundred-board::-webkit-scrollbar {
+  width: 10px;
+}
+.hundred-board::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+.hundred-board::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 10px;
+}
+
+/* 百格圖內的每一格 */
 .board-cell {
   background: #f8fafc;
-  border: 1.5px solid #cbd5e1;
-  border-radius: 6px;
+  border: 2px solid #cbd5e1;
+  border-radius: 10px;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: clamp(0.75rem, 2vmin, 1.25rem);
-  font-weight: 800;
   cursor: pointer;
   transition: transform 0.1s, background-color 0.1s;
+  scroll-snap-align: start;
 }
 
 .board-cell:active {
-  transform: scale(0.9);
+  transform: scale(0.92);
   background-color: #e2e8f0;
 }
 
-.num-tens { color: var(--tens-color); }
-.num-ones { color: var(--ones-color); }
+/* 數字字體放大 10% (由 1.15rem 增至 1.28rem) */
+.digit-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(1.15rem, 2.5vmin, 1.45rem); /* 比原版放大 10% */
+  font-weight: 900;
+  letter-spacing: -2px; /* 縮減間距，使十位與個位靠得更近 */
+}
 
-/* 進階純數字模式：移除顏色提示 */
+/* 十位與個位顏色 */
+.num-tens {
+  color: var(--tens-color);
+  margin-right: -2px; /* 負 Margin：讓十位與個位更加靠近 */
+}
+.num-ones {
+  color: var(--ones-color);
+  margin-left: -2px;
+}
+
+/* 進階純數字模式：去除顏色提示 */
 .hard-mode .num-tens,
 .hard-mode .num-ones {
   color: #1e293b !important;
 }
 
 /* ==========================================================================
-   認讀挑戰視圖 (僅有單一「下一題」按鈕)
+   認讀挑戰視圖 (字體放大 10% 且靠近)
    ========================================================================== */
 .quiz-stage {
   flex: 1;
@@ -184,7 +223,7 @@ html, body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 24px;
+  gap: 22px;
   padding: 10px;
 }
 
@@ -203,9 +242,11 @@ html, body {
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: clamp(5rem, 15vmin, 7.5rem);
+  /* 字體放大 10% (由 7.5rem 提升至 8.25rem) */
+  font-size: clamp(5.5rem, 16.5vmin, 8.25rem);
   font-weight: 900;
   box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  letter-spacing: -6px; /* 大數字間距同步縮緊 */
 }
 
 .quiz-control-area {
@@ -214,7 +255,6 @@ html, body {
   justify-content: center;
 }
 
-/* 極大且容易點選的「下一題」按鈕 */
 .single-next-btn {
   width: 100%;
   border: none;
@@ -234,7 +274,7 @@ html, body {
 }
 
 /* ==========================================================================
-   彈窗與高亮動畫 (十位高亮 ➜ 個位高亮)
+   彈窗與高亮動畫
    ========================================================================== */
 .modal-layer {
   display: none;
@@ -278,25 +318,26 @@ html, body {
 }
 
 .inspect-big-digits {
-  font-size: clamp(5rem, 20vmin, 7.5rem);
+  /* 放大 10% (由 7.5rem 增至 8.25rem) */
+  font-size: clamp(5.5rem, 22vmin, 8.25rem);
   font-weight: 900;
   line-height: 1.1;
   margin: 10px 0;
   display: flex;
   justify-content: center;
-  gap: 4px;
+  letter-spacing: -6px; /* 緊靠在一起 */
 }
 
-/* 高亮波紋動畫 */
+/* 依序高亮效果 */
 .num-tens, .num-ones {
   display: inline-block;
-  padding: 0 6px;
+  padding: 0 4px;
   border-radius: 12px;
   transition: transform 0.25s, background-color 0.25s;
 }
 
 .pulse-active {
-  transform: scale(1.25);
+  transform: scale(1.22);
   background-color: #fef08a !important;
   color: #1e293b !important;
   box-shadow: 0 0 16px rgba(253, 224, 71, 0.85);
@@ -318,15 +359,12 @@ html, body {
   transition: opacity 0.3s;
 }
 
-.inspect-pill.pill-active {
-  opacity: 1;
-}
-
+.inspect-pill.pill-active { opacity: 1; }
 .pill-tens { background: var(--tens-bg); color: var(--tens-color); }
 .pill-ones { background: var(--ones-bg); color: var(--ones-color); }
 
 .inspect-guide {
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   color: #64748b;
   font-weight: bold;
   margin-bottom: 14px;
@@ -343,7 +381,7 @@ html, body {
   cursor: pointer;
 }
 
-/* 完成挑戰卡片 */
+/* 通關彈窗 */
 .finish-badge { font-size: 4.5rem; margin-bottom: 10px; }
 .finish-title { font-size: 1.8rem; color: #1e293b; margin-bottom: 10px; }
 .finish-desc { font-size: 1.2rem; color: #475569; margin-bottom: 24px; line-height: 1.4; }
