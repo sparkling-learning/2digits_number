@@ -1,11 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // --- 狀態管理 ---
+  // --- 狀態控制 ---
   let isHardMode = false;
   let currentStep = 1;
   let targetNumber = 10;
   let questionPool = [];
 
-  // 輕量音效合成器 (提供溫和的介面點擊回饋，無人聲朗讀)
+  // 輕量提示音效 (Web Audio API)
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   function playBeep(freq, type, duration) {
     if (audioCtx.state === "suspended") audioCtx.resume();
@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnRestartGame = document.getElementById("btn-restart-game");
 
   // ==========================================================================
-  // 1. 百格圖建構 (1-100)
+  // 1. 建構百格圖 (1-100)
   // ==========================================================================
   function renderHundredBoard() {
     boardEl.innerHTML = "";
@@ -89,7 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 動態生成數柱（1 條 10 粒）
+  // 生成十位數柱 (一條 10 粒)
   function renderTensRods(count) {
     tensRodsCanvas.innerHTML = "";
     for (let r = 0; r < count; r++) {
@@ -104,7 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 動態生成數粒（1 個 1 粒）
+  // 生成個位數粒 (5 粒一行，放滿第 1 行才轉下行)
   function renderOnesCubes(count) {
     onesCubesCanvas.innerHTML = "";
     for (let c = 0; c < count; c++) {
@@ -114,7 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 點選數字：純視覺動態高亮（十位數柱 ➜ 個位數粒，無錄音播放）
+  // 點選數字：純視覺依序高亮 (十位數柱 ➜ 個位數粒)
   function inspectNumber(num) {
     playBeep(440, "sine", 0.08);
     targetNumber = num;
@@ -127,7 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
     valTensTxt.textContent = t;
     valOnesTxt.textContent = o;
 
-    // 繪製具象數柱與數粒
+    // 繪製具象圖形
     renderTensRods(t);
     renderOnesCubes(o);
 
@@ -150,7 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
         inspectStatusText.textContent = `十位是 ${t}：代表 ${t} 條十粒 (${t * 10})`;
       }, 300);
 
-      // 第二階段：高亮個位
+      // 第二階段：高亮個位 (5 粒一行展示)
       setTimeout(() => {
         inspectT.classList.remove("pulse-active");
         blockTens.classList.remove("block-active");
@@ -217,7 +217,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ==========================================================================
-  // 3. 認讀挑戰邏輯 (共10題，單一「下一題」按鈕)
+  // 3. 認讀挑戰邏輯 (單一「下一題」按鈕)
   // ==========================================================================
   function startQuiz() {
     currentStep = 1;
@@ -252,6 +252,6 @@ document.addEventListener("DOMContentLoaded", () => {
     startQuiz();
   });
 
-  // 繪製百格圖
+  // 初始繪製
   renderHundredBoard();
 });
