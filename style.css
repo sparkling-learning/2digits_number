@@ -1,11 +1,11 @@
 /* ==========================================================================
-   全裝置響應式樣式：每次3行滾動 + 視覺積木 + 字體放大10% + 緊縮間距
+   全裝置響應式樣式：數粒 5 粒一行 + 每次 3 行滾動 + 字體放大 10%
    ========================================================================== */
 :root {
   --tens-color: #0d47a1;      /* 深藍色：十位數 */
   --ones-color: #c62828;      /* 鮮紅色：個位數 */
-  --tens-bg: #e3f2fd;        /* 淡藍色方塊底色 */
-  --ones-bg: #ffebee;        /* 淡紅色方塊底色 */
+  --tens-bg: #e3f2fd;        /* 淡藍色方塊 */
+  --ones-bg: #ffebee;        /* 淡紅色方塊 */
   --tens-rod-color: #1976d2;  /* 積木條藍色 */
   --ones-cube-color: #e53935; /* 積木顆紅色 */
   --main-bg: #f0f4f8;
@@ -125,7 +125,7 @@ html, body {
 .back-btn { background: #64748b; color: white; }
 
 /* ==========================================================================
-   百格圖：每次顯示 3 行，滾動顯示另外 3 行
+   百格圖：每次顯示 3 行，下捲顯示另外 3 行
    ========================================================================== */
 .scroll-window-container {
   flex: 1;
@@ -253,7 +253,7 @@ html, body {
 }
 
 /* ==========================================================================
-   彈窗：淡藍色數柱 (1條10粒) 與 淡紅色數粒 (1個1粒)
+   彈窗：淡藍色數柱 與 淡紅色數粒 (5 粒一行)
    ========================================================================== */
 .modal-layer {
   display: none;
@@ -323,7 +323,6 @@ html, body {
   box-shadow: 0 0 16px rgba(253, 224, 71, 0.85);
 }
 
-/* 具象積木圖像展示容器 */
 .manipulatives-container {
   display: flex;
   width: 100%;
@@ -341,7 +340,7 @@ html, body {
   align-items: center;
   border: 3px solid transparent;
   transition: transform 0.25s, border-color 0.25s, box-shadow 0.25s;
-  min-height: 160px;
+  min-height: 165px;
 }
 
 /* 淡藍色方塊 (十位) */
@@ -388,7 +387,6 @@ html, body {
   flex-wrap: wrap;
 }
 
-/* 單條數柱 (內含 10 粒微型積木) */
 .rod-pillar {
   width: 14px;
   height: 90px;
@@ -407,25 +405,28 @@ html, body {
   border-bottom: 1px solid rgba(255,255,255,0.45);
 }
 
-/* 個位：數粒 (Unit Cubes) 區域 */
-.cubes-grid {
-  display: flex;
-  gap: 6px;
-  align-items: center;
+/* ==========================================================================
+   個位：數粒 5 粒一行排列 (Ten-Frame 5-column grid)
+   ========================================================================== */
+.cubes-grid-5 {
+  display: grid;
+  grid-template-columns: repeat(5, 20px); /* 精確固定 5 欄，每欄 1 粒 */
+  grid-auto-rows: 20px;
+  gap: 8px 6px;                           /* 行距 8px，欄距 6px */
   justify-content: center;
-  flex-wrap: wrap;
-  max-width: 140px;
+  align-content: center;
+  width: 128px;
   min-height: 96px;
 }
 
 /* 單顆獨立數粒 (1個1粒) */
 .cube-unit {
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   background-color: var(--ones-cube-color);
-  border-radius: 3px;
-  box-shadow: 1px 2px 4px rgba(0,0,0,0.15);
-  border: 1px solid rgba(255,255,255,0.6);
+  border-radius: 4px;
+  box-shadow: 1px 2px 4px rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.7);
 }
 
 .inspect-guide {
