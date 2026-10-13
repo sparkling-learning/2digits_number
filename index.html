@@ -3,39 +3,30 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>雙位數認讀</title>
+  <title>雙位數認讀樂園</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app-wrapper">
     <!-- 頂部導航 -->
     <header class="top-nav">
-      <h1 class="app-title">🔢 雙位數認讀</h1>
+      <h1 class="app-title">🔢 雙位數認讀樂園</h1>
       <div class="diff-switch">
         <button id="btn-easy" class="mode-btn active" type="button">初階 (色彩與圖像)</button>
         <button id="btn-hard" class="mode-btn" type="button">進階 (純數字)</button>
       </div>
     </header>
 
-    <!-- 第一頁：百格圖 (只顯示 3 行，下拉/按鍵翻頁) -->
+    <!-- 第一頁：百格圖（置上方中央，純手指滑動滾動） -->
     <section id="view-grid" class="view-panel active">
       <div class="view-toolbar">
-        <span class="view-hint">👇 每次顯示 3 行，下拉看其餘行數！點選觀察積木</span>
+        <span class="view-hint">👆 用手指上下滑動百格圖（每次顯示 3 行）</span>
         <button id="btn-to-quiz" class="action-btn link-btn" type="button">挑戰認讀 ➔</button>
       </div>
 
       <div class="scroll-window-container">
-        <!-- 百格圖 -->
+        <!-- 百格圖本體（已移除上下箭咀按鈕） -->
         <div id="hundred-board" class="hundred-board"></div>
-
-        <!-- 右側專屬上下捲動按鈕列 -->
-        <div class="scroll-controls-side">
-          <button id="btn-scroll-up" class="side-scroll-btn" type="button" aria-label="向上滑動 3 行">▲</button>
-          <div class="scroll-track-indicator">
-            <div id="scroll-thumb" class="scroll-thumb-indicator"></div>
-          </div>
-          <button id="btn-scroll-down" class="side-scroll-btn" type="button" aria-label="向下滑動 3 行">▼</button>
-        </div>
       </div>
     </section>
 
@@ -46,7 +37,7 @@
         <span class="quiz-counter">第 <span id="quiz-num">1</span> / 10 題</span>
       </div>
       <div class="quiz-stage">
-        <p class="quiz-instruction">請讀出這個數字：</p>
+        <p class="quiz-instruction">請大聲讀出這個數字：</p>
         
         <div id="quiz-number-box" class="quiz-big-card">
           <span id="quiz-t" class="num-tens">0</span><span id="quiz-o" class="num-ones">0</span>
@@ -77,11 +68,11 @@
           <div id="block-ones" class="cpa-block block-ones">
             <div class="cpa-label">個位：<span id="val-ones-txt">0</span> 個一</div>
             <div id="ones-cubes-canvas" class="cubes-grid-5"></div>
-            <div class="cpa-sub-label"></div>
+            <div class="cpa-sub-label">（5 粒一行，滿行才換行）</div>
           </div>
         </div>
 
-        <p id="inspect-status-text" class="inspect-guide">請讀出數字！</p>
+        <p id="inspect-status-text" class="inspect-guide">請小朋友大聲讀出來！</p>
         <button id="btn-replay-anim" class="inspect-action-btn" type="button">✨ 重新展示</button>
       </div>
     </div>
@@ -91,7 +82,7 @@
       <div class="finish-box">
         <div class="finish-badge">🏆</div>
         <h2 class="finish-title">恭喜完成挑戰！</h2>
-        <p class="finish-desc">你成功完成了 10 題雙位數認讀！欣賞你的努力！🌟</p>
+        <p class="finish-desc">你成功完成了 10 題雙位數認讀！表現非常出色！🌟</p>
         <button id="btn-restart-game" class="single-next-btn" type="button">🔄 再玩一次</button>
       </div>
     </div>
