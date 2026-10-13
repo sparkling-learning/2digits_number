@@ -112,7 +112,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // 檢視數字動畫
+ // 檢視數字動畫（數柱與數粒展示時間各延長 1.5 秒）
   function inspectNumber(num) {
     playBeep(440, "sine", 0.08);
     targetNumber = num;
@@ -137,6 +137,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (num >= 10) {
       inspectStatusText.textContent = "請看淡藍色方塊：有幾條數柱？";
+      
+      // 第 1 階段：高亮十位數柱 (0.3 秒開始，展示延長至 3.5 秒，共停留 3.2 秒)
       setTimeout(() => {
         inspectT.classList.add("pulse-active");
         blockTens.classList.add("block-active");
@@ -144,6 +146,7 @@ document.addEventListener("DOMContentLoaded", () => {
         inspectStatusText.textContent = `十位是 ${t}：代表 ${t} 條十粒 (${t * 10})`;
       }, 300);
 
+      // 第 2 階段：高亮個位數粒 (3.5 秒開始，展示延長至 5.1 秒，共停留 3.1 秒)
       setTimeout(() => {
         inspectT.classList.remove("pulse-active");
         blockTens.classList.remove("block-active");
@@ -152,23 +155,30 @@ document.addEventListener("DOMContentLoaded", () => {
         blockOnes.classList.add("block-active");
         playBeep(660, "triangle", 0.15);
         inspectStatusText.textContent = o > 0 ? `個位是 ${o}：代表 ${o} 個一粒 (${o})` : "個位是 0：代表 0 個一粒";
-      }, 2000);
+      }, 3500);
 
+      // 第 3 階段：提示朗讀 (5.1 秒展示完整數字)
       setTimeout(() => {
         inspectO.classList.remove("pulse-active");
         blockOnes.classList.remove("block-active");
         inspectStatusText.textContent = `合起來讀作：${num}，請讀出數字！`;
-      }, 3600);
+      }, 5100);
     } else {
+      // 1-9 個位數展示時間相應延長
       setTimeout(() => {
         inspectO.classList.add("pulse-active");
         blockOnes.classList.add("block-active");
         playBeep(660, "triangle", 0.15);
         inspectStatusText.textContent = `個位是 ${num}：代表 ${num} 粒！請讀出數字`;
       }, 300);
+
+      setTimeout(() => {
+        inspectO.classList.remove("pulse-active");
+        blockOnes.classList.remove("block-active");
+        inspectStatusText.textContent = `請讀出數字：${num}！`;
+      }, 3500);
     }
   }
-
   btnCloseInspect.addEventListener("pointerdown", () => inspectModal.classList.remove("active"));
   btnReplayAnim.addEventListener("pointerdown", () => inspectNumber(targetNumber));
 
