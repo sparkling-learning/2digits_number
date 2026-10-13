@@ -193,7 +193,7 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => {
         inspectO.classList.remove("pulse-active");
         blockOnes.classList.remove("block-active");
-        inspectStatusText.textContent = `合起來讀作：${num}，請小朋友大聲讀出來！`;
+        inspectStatusText.textContent = `合起來讀作：${num}。`;
       }, 3600);
     } else {
       setTimeout(() => {
