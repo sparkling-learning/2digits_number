@@ -5,23 +5,25 @@ document.addEventListener("DOMContentLoaded", () => {
   let targetNumber = 10;
   let questionPool = [];
 
-  // 輕量提示音效 (Web Audio API)
+  // 音效
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   function playBeep(freq, type, duration) {
-    if (audioCtx.state === "suspended") audioCtx.resume();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + duration);
+    try {
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    } catch(e) {}
   }
 
-  // --- DOM 節點引用 ---
+  // DOM 節點引用
   const boardEl = document.getElementById("hundred-board");
   const viewGrid = document.getElementById("view-grid");
   const viewQuiz = document.getElementById("view-quiz");
@@ -30,19 +32,22 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnToQuiz = document.getElementById("btn-to-quiz");
   const btnToGrid = document.getElementById("btn-to-grid");
 
-  // 放大檢視彈窗
+  // 捲動按鈕節點
+  const btnScrollUp = document.getElementById("btn-scroll-up");
+  const btnScrollDown = document.getElementById("btn-scroll-down");
+  const scrollThumb = document.getElementById("scroll-thumb");
+
+  // 放大檢視彈窗節點
   const inspectModal = document.getElementById("inspect-modal");
   const btnCloseInspect = document.getElementById("btn-close-inspect");
   const inspectT = document.getElementById("inspect-t");
   const inspectO = document.getElementById("inspect-o");
-  
   const blockTens = document.getElementById("block-tens");
   const blockOnes = document.getElementById("block-ones");
   const valTensTxt = document.getElementById("val-tens-txt");
   const valOnesTxt = document.getElementById("val-ones-txt");
   const tensRodsCanvas = document.getElementById("tens-rods-canvas");
   const onesCubesCanvas = document.getElementById("ones-cubes-canvas");
-
   const inspectStatusText = document.getElementById("inspect-status-text");
   const btnReplayAnim = document.getElementById("btn-replay-anim");
 
@@ -51,8 +56,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const quizT = document.getElementById("quiz-t");
   const quizO = document.getElementById("quiz-o");
   const btnNextQuestion = document.getElementById("btn-next-question");
-
-  // 通關彈窗
   const finishModal = document.getElementById("finish-modal");
   const btnRestartGame = document.getElementById("btn-restart-game");
 
@@ -60,6 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 1. 建構百格圖 (1-100)
   // ==========================================================================
   function renderHundredBoard() {
+    if (!boardEl) return;
     boardEl.innerHTML = "";
     for (let i = 1; i <= 100; i++) {
       const cell = document.createElement("div");
@@ -88,24 +92,38 @@ document.addEventListener("DOMContentLoaded", () => {
       boardEl.appendChild(cell);
     }
   }
-JavaScript
-// 計算 3 行的完整滾動高度（3個行高 + 3個行距）
-function scrollBoardByRows(rowCount = 3, direction = 1) {
-  const boardEl = document.getElementById("hundred-board");
-  if (!boardEl) return;
-  const firstCell = boardEl.querySelector(".board-cell");
-  if (!firstCell) return;
-  
-  const cellHeight = firstCell.getBoundingClientRect().height;
-  const computedGap = parseFloat(window.getComputedStyle(boardEl).rowGap) || 8;
-  const distance = (cellHeight + computedGap) * rowCount;
-  
-  boardEl.scrollBy({
-    top: distance * direction,
-    behavior: "smooth"
-  });
-}
-  // 生成十位數柱 (一條 10 粒)
+
+  // 每次精確滾動 3 行
+  function scrollBoardByRows(direction = 1) {
+    if (!boardEl) return;
+    const firstCell = boardEl.querySelector(".board-cell");
+    if (!firstCell) return;
+    
+    const cellHeight = firstCell.getBoundingClientRect().height;
+    const computedGap = parseFloat(window.getComputedStyle(boardEl).rowGap) || 8;
+    const distance = (cellHeight + computedGap) * 3;
+    
+    boardEl.scrollBy({
+      top: distance * direction,
+      behavior: "smooth"
+    });
+  }
+
+  // 右側滾動按鈕事件
+  if (btnScrollUp) btnScrollUp.addEventListener("pointerdown", () => scrollBoardByRows(-1));
+  if (btnScrollDown) btnScrollDown.addEventListener("pointerdown", () => scrollBoardByRows(1));
+
+  // 更新右側滑塊指示條位置
+  if (boardEl && scrollThumb) {
+    boardEl.addEventListener("scroll", () => {
+      const maxScroll = boardEl.scrollHeight - boardEl.clientHeight;
+      if (maxScroll <= 0) return;
+      const progress = boardEl.scrollTop / maxScroll;
+      scrollThumb.style.top = `${progress * 70}%`;
+    });
+  }
+
+  // 生成十位數柱
   function renderTensRods(count) {
     tensRodsCanvas.innerHTML = "";
     for (let r = 0; r < count; r++) {
@@ -120,7 +138,7 @@ function scrollBoardByRows(rowCount = 3, direction = 1) {
     }
   }
 
-  // 生成個位數粒 (5 粒一行，放滿第 1 行才轉下行)
+  // 生成個位數粒 (5 粒一行)
   function renderOnesCubes(count) {
     onesCubesCanvas.innerHTML = "";
     for (let c = 0; c < count; c++) {
@@ -130,7 +148,7 @@ function scrollBoardByRows(rowCount = 3, direction = 1) {
     }
   }
 
-  // 點選數字：純視覺依序高亮 (十位數柱 ➜ 個位數粒)
+  // 檢視數字動畫
   function inspectNumber(num) {
     playBeep(440, "sine", 0.08);
     targetNumber = num;
@@ -143,11 +161,9 @@ function scrollBoardByRows(rowCount = 3, direction = 1) {
     valTensTxt.textContent = t;
     valOnesTxt.textContent = o;
 
-    // 繪製具象圖形
     renderTensRods(t);
     renderOnesCubes(o);
 
-    // 重置高亮
     inspectT.classList.remove("pulse-active");
     inspectO.classList.remove("pulse-active");
     blockTens.classList.remove("block-active");
@@ -157,8 +173,6 @@ function scrollBoardByRows(rowCount = 3, direction = 1) {
 
     if (num >= 10) {
       inspectStatusText.textContent = "請看淡藍色方塊：有幾條數柱？";
-      
-      // 第一階段：高亮十位
       setTimeout(() => {
         inspectT.classList.add("pulse-active");
         blockTens.classList.add("block-active");
@@ -166,7 +180,6 @@ function scrollBoardByRows(rowCount = 3, direction = 1) {
         inspectStatusText.textContent = `十位是 ${t}：代表 ${t} 條十粒 (${t * 10})`;
       }, 300);
 
-      // 第二階段：高亮個位 (5 粒一行展示)
       setTimeout(() => {
         inspectT.classList.remove("pulse-active");
         blockTens.classList.remove("block-active");
@@ -174,14 +187,9 @@ function scrollBoardByRows(rowCount = 3, direction = 1) {
         inspectO.classList.add("pulse-active");
         blockOnes.classList.add("block-active");
         playBeep(660, "triangle", 0.15);
-        if (o > 0) {
-          inspectStatusText.textContent = `個位是 ${o}：代表 ${o} 個一粒 (${o})`;
-        } else {
-          inspectStatusText.textContent = "個位是 0：代表 0 個一粒";
-        }
+        inspectStatusText.textContent = o > 0 ? `個位是 ${o}：代表 ${o} 個一粒 (${o})` : "個位是 0：代表 0 個一粒";
       }, 2000);
 
-      // 第三階段：提示朗讀
       setTimeout(() => {
         inspectO.classList.remove("pulse-active");
         blockOnes.classList.remove("block-active");
@@ -233,7 +241,7 @@ function scrollBoardByRows(rowCount = 3, direction = 1) {
   });
 
   // ==========================================================================
-  // 3. 認讀挑戰邏輯 (單一「下一題」按鈕)
+  // 3. 認讀挑戰邏輯
   // ==========================================================================
   function startQuiz() {
     currentStep = 1;
@@ -268,6 +276,6 @@ function scrollBoardByRows(rowCount = 3, direction = 1) {
     startQuiz();
   });
 
-  // 初始繪製
+  // 初始繪製百格圖
   renderHundredBoard();
 });
