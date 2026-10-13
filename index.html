@@ -2,72 +2,81 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>認識月曆與心情 - 日曆小管家</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>幼兒雙位數認讀大冒險</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="game-container">
-    <!-- 頂部導航列 -->
-    <header class="top-bar">
-      <div class="header-title-wrap">
-        <span class="header-icon">📅</span>
-        <h1 class="header-title">認識月曆：看月曆讀句子與心情</h1>
-      </div>
-      <div id="feedback-banner" class="feedback-banner" aria-live="polite">
-        請在月曆中找出正確卡片，拉到句子裡！
-      </div>
-      <div class="header-actions">
-        <div class="mode-switch-wrap">
-          <button id="btn-mode-easy" class="btn-mode active">初階版</button>
-          <button id="btn-mode-hard" class="btn-mode">進階版</button>
+  <!-- 音效元件 (採用 Web Audio API 合成，無須加載外部檔案，確保離線與跨裝置穩定) -->
+  
+  <div id="viewport-scaler">
+    <main class="game-stage" id="game-stage">
+      <!-- 頂部資訊與難度切換列 -->
+      <header class="header-bar">
+        <h1 class="game-title">🔢 雙位數認讀冒險</h1>
+        <div class="difficulty-toggle">
+          <button id="btn-mode-easy" class="btn-diff active">初階 (色彩輔助)</button>
+          <button id="btn-mode-hard" class="btn-diff">進階 (挑戰無提示)</button>
         </div>
-        <button id="btn-restart" class="btn-restart-top">再玩一次 🔄</button>
-      </div>
-    </header>
+      </header>
 
-    <!-- 主遊戲舞台 -->
-    <main class="main-content">
-      <!-- 上半部：放大版月曆 -->
-      <section class="calendar-section">
-        <div class="calendar-plate">
-          <div class="cal-top-row">
-            <div class="cal-slot-item">
-              <span class="slot-label-text">年份：</span>
-              <div class="source-card card-year" id="card-year" data-type="year"></div>
-            </div>
-            <div class="cal-slot-item">
-              <span class="slot-label-text">月份：</span>
-              <div class="source-card card-month" id="card-month" data-type="month"></div>
-            </div>
-          </div>
-
-          <div class="cal-grid" id="cal-grid"></div>
+      <!-- 第一頁：1-100 百格圖探索 -->
+      <section id="page-grid" class="screen-panel active">
+        <div class="panel-nav">
+          <span class="guide-text">👆 點選任意格子，觀察十位與個位！</span>
+          <button id="btn-goto-challenge" class="btn-nav">挑戰認讀 ➜</button>
+        </div>
+        <div class="grid-frame">
+          <div id="grid-board" class="hundred-board"></div>
         </div>
       </section>
 
-      <!-- 下半部：句子與心情互動區 -->
-      <section class="bottom-section">
-        <!-- 句子填空列 (放大25%) -->
-        <div class="sentence-box">
-          <div class="sentence-guide" id="sentence-guide-txt">
-            🗣️ 請把月曆上的字卡拖進句子空格裡，完成後點擊字詞觀察月曆發光：
-          </div>
-          <div class="sentence-row">
-            <span class="sentence-prefix">今天是</span>
-            <div class="sentence-slot slot-year" id="target-year" data-type="year">____年</div>
-            <div class="sentence-slot slot-month" id="target-month" data-type="month">____月</div>
-            <div class="sentence-slot slot-day" id="target-day" data-type="day">____日</div>
-            <div class="sentence-slot slot-weekday" id="target-weekday" data-type="weekday">星期____</div>
-          </div>
+      <!-- 第二頁：10題隨機認讀挑戰 -->
+      <section id="page-quiz" class="screen-panel">
+        <div class="panel-nav">
+          <button id="btn-goto-grid" class="btn-nav btn-secondary">⬅ 回百格圖</button>
+          <span class="step-badge">第 <span id="quiz-index">1</span> / 10 題</span>
         </div>
-
-        <!-- 心情互動區 (點擊即選取，放大30%) -->
-        <div class="mood-box hidden" id="mood-section">
-          <div class="mood-question" id="mood-prompt-title">💖 今天的心情怎麼樣？請點選下方的心情卡片：</div>
-          <div class="mood-deck" id="mood-deck"></div>
+        <div class="quiz-content">
+          <p class="quiz-prompt">請大聲讀出這個數字：</p>
+          <div id="card-display" class="quiz-card">
+            <span id="quiz-tens" class="digit-box digit-tens">0</span><span id="quiz-ones" class="digit-box digit-ones">0</span>
+          </div>
+          <div class="action-row">
+            <button id="btn-pass" class="btn-act btn-success">🌟 我讀對了！</button>
+            <button id="btn-try-again" class="btn-act btn-retry">💪 試試看</button>
+          </div>
         </div>
       </section>
+
+      <!-- 第一頁放大導讀彈窗 (點擊格子後放大高亮十位與個位) -->
+      <div id="modal-inspect" class="modal-backdrop">
+        <div class="modal-box">
+          <button id="btn-close-inspect" class="btn-close">×</button>
+          <div class="zoom-number">
+            <span id="zoom-tens" class="digit-box digit-tens">0</span><span id="zoom-ones" class="digit-box digit-ones">0</span>
+          </div>
+          <div class="breakdown-tags">
+            <span id="tag-tens" class="tag-pill tag-tens">十位：<span id="val-tens">0</span> 個十</span>
+            <span id="tag-ones" class="tag-pill tag-ones">個位：<span id="val-ones">0</span> 個一</span>
+          </div>
+          <p id="read-prompt-text" class="modal-tip">正在引導朗讀...</p>
+          <button id="btn-replay-read" class="btn-act btn-read">🔊 再聽一次</button>
+        </div>
+      </div>
+
+      <!-- 正向教育回饋彈窗 (每題完成 / 失敗重試 / 通關大獎) -->
+      <div id="modal-feedback" class="modal-backdrop">
+        <div class="feedback-card">
+          <div id="fb-icon" class="fb-icon">🎉</div>
+          <h2 id="fb-title" class="fb-title">非常棒！</h2>
+          <p id="fb-message" class="fb-msg">欣賞你的努力！</p>
+          <div class="feedback-actions">
+            <button id="btn-fb-next" class="btn-act btn-success">下一題 ➔</button>
+            <button id="btn-fb-replay" class="btn-act btn-primary hide">🔄 再玩一次</button>
+          </div>
+        </div>
+      </div>
     </main>
   </div>
 
