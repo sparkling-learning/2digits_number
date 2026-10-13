@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>雙位數認讀樂園</title>
+  <title>雙位數認讀</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app-wrapper">
     <!-- 頂部導航 -->
     <header class="top-nav">
-      <h1 class="app-title">🔢 雙位數認讀樂園</h1>
+      <h1 class="app-title">🔢 雙位數認讀</h1>
       <div class="diff-switch">
         <button id="btn-easy" class="mode-btn active" type="button">初階 (色彩與圖像)</button>
         <button id="btn-hard" class="mode-btn" type="button">進階 (純數字)</button>
@@ -37,7 +37,7 @@
         <span class="quiz-counter">第 <span id="quiz-num">1</span> / 10 題</span>
       </div>
       <div class="quiz-stage">
-        <p class="quiz-instruction">請大聲讀出這個數字：</p>
+        <p class="quiz-instruction">請讀出數字：</p>
         
         <div id="quiz-number-box" class="quiz-big-card">
           <span id="quiz-t" class="num-tens">0</span><span id="quiz-o" class="num-ones">0</span>
@@ -68,11 +68,11 @@
           <div id="block-ones" class="cpa-block block-ones">
             <div class="cpa-label">個位：<span id="val-ones-txt">0</span> 個一</div>
             <div id="ones-cubes-canvas" class="cubes-grid-5"></div>
-            <div class="cpa-sub-label">（5 粒一行，滿行才換行）</div>
+            <div class="cpa-sub-label"></div>
           </div>
         </div>
 
-        <p id="inspect-status-text" class="inspect-guide">請小朋友大聲讀出來！</p>
+        <p id="inspect-status-text" class="inspect-guide">請讀出數字！</p>
         <button id="btn-replay-anim" class="inspect-action-btn" type="button">✨ 重新展示</button>
       </div>
     </div>
@@ -82,7 +82,7 @@
       <div class="finish-box">
         <div class="finish-badge">🏆</div>
         <h2 class="finish-title">恭喜完成挑戰！</h2>
-        <p class="finish-desc">你成功完成了 10 題雙位數認讀！表現非常出色！🌟</p>
+        <p class="finish-desc">你成功完成了 10 題雙位數認讀！欣賞你的努力和專注！🌟</p>
         <button id="btn-restart-game" class="single-next-btn" type="button">🔄 再玩一次</button>
       </div>
     </div>
