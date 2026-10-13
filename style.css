@@ -1,16 +1,14 @@
 /* ==========================================================================
-   全螢幕等比例縮放與防止溢出設定 (Universal Screen Scaling)
+   全裝置響應式樣式：確保百格圖 1-100 完全自適應且永不裁切
    ========================================================================== */
 :root {
-  --color-tens: #1976d2;      /* 十位藍色 */
-  --color-ones: #d32f2f;      /* 個位紅色 */
-  --color-bg-tens: #e3f2fd;
-  --color-bg-ones: #ffebee;
+  --tens-color: #1565c0;      /* 深藍色：十位數 */
+  --ones-color: #d32f2f;      /* 鮮紅色：個位數 */
+  --tens-bg: #e3f2fd;
+  --ones-bg: #ffebee;
+  --main-bg: #f0f4f8;
   --btn-green: #2e7d32;
-  --btn-orange: #f57c00;
-  --btn-blue: #1565c0;
-  --stage-width: 960px;
-  --stage-height: 640px;
+  --board-bg: #ffffff;
 }
 
 * {
@@ -19,257 +17,228 @@
   padding: 0;
   user-select: none;
   -webkit-user-select: none;
-  touch-action: none;          /* 徹底防止雙擊放大與畫面拖移 */
+  touch-action: manipulation; /* 允許正常觸控，但防止雙指縮放與延遲 */
 }
 
 html, body {
   width: 100%;
   height: 100%;
+  background-color: var(--main-bg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang TC", "Microsoft JhengHei", sans-serif;
   overflow: hidden;
-  background-color: #0b1325;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-family: 'PingFang HK', 'Noto Sans TC', 'Microsoft JhengHei', sans-serif;
 }
 
-/* 縮放外層容器：等比例鎖定在 960x640 基準畫布 */
-#viewport-scaler {
-  width: var(--stage-width);
-  height: var(--stage-height);
-  position: absolute;
-  transform-origin: center center;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-/* 核心遊戲舞台 */
-.game-stage {
-  width: 100%;
-  height: 100%;
-  background: #f8fafc;
-  border-radius: 20px;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+/* 撐滿整個視窗的核心容器 */
+.app-wrapper {
+  width: 100vw;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 16px 20px;
-  position: relative;
-  overflow: hidden;
+  padding: env(safe-area-inset-top, 8px) env(safe-area-inset-right, 8px) env(safe-area-inset-bottom, 8px) env(safe-area-inset-left, 8px);
 }
 
-/* 頂部標題與難度按鈕 */
-.header-bar {
+/* 頂部列 */
+.top-nav {
+  height: 48px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 48px;
-  margin-bottom: 8px;
-  border-bottom: 2px dashed #cbd5e1;
-  padding-bottom: 6px;
+  padding: 0 12px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+  flex-shrink: 0;
+  margin-bottom: 6px;
 }
 
-.game-title {
-  font-size: 1.5rem;
+.app-title {
+  font-size: 1.2rem;
   color: #1e293b;
   font-weight: 800;
 }
 
-.difficulty-toggle {
+.diff-switch {
   display: flex;
   background: #e2e8f0;
-  border-radius: 30px;
+  border-radius: 20px;
   padding: 3px;
   gap: 4px;
 }
 
-.btn-diff {
+.mode-btn {
   border: none;
   background: transparent;
-  padding: 6px 14px;
-  font-size: 0.95rem;
+  padding: 5px 12px;
+  font-size: 0.85rem;
   font-weight: bold;
-  border-radius: 20px;
+  border-radius: 16px;
   cursor: pointer;
   color: #475569;
-  transition: all 0.2s;
 }
 
-.btn-diff.active {
+.mode-btn.active {
   background: #2563eb;
-  color: #ffffff;
-  box-shadow: 0 2px 6px rgba(37,99,235,0.3);
+  color: white;
 }
 
-/* 畫面分頁機制 */
-.screen-panel {
+/* 視圖切換面板 */
+.view-panel {
   display: none;
   flex: 1;
   flex-direction: column;
   overflow: hidden;
 }
 
-.screen-panel.active {
+.view-panel.active {
   display: flex;
 }
 
-.panel-nav {
+/* 面板工具列 */
+.view-toolbar {
+  height: 44px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 44px;
-  margin-bottom: 6px;
+  padding: 0 8px;
+  flex-shrink: 0;
 }
 
-.guide-text, .step-badge {
-  font-size: 1.15rem;
+.view-hint, .quiz-counter {
+  font-size: 1rem;
   font-weight: 700;
   color: #334155;
 }
 
-.btn-nav {
+.action-btn {
   border: none;
-  background: var(--btn-green);
-  color: white;
-  padding: 8px 18px;
-  font-size: 1rem;
+  padding: 8px 16px;
+  font-size: 0.95rem;
   font-weight: bold;
-  border-radius: 30px;
+  border-radius: 20px;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
 }
 
-.btn-nav.btn-secondary {
-  background: #64748b;
-}
+.link-btn { background: #2563eb; color: white; }
+.back-btn { background: #64748b; color: white; }
 
 /* ==========================================================================
-   第一頁：1-100 百格圖設計
+   百格圖 (1-100) 容器與自適應網格
    ========================================================================== */
-.grid-frame {
+.grid-card-container {
   flex: 1;
+  background: var(--board-bg);
+  border-radius: 14px;
+  padding: 6px;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: #ffffff;
-  border-radius: 14px;
-  border: 2px solid #e2e8f0;
-  padding: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  overflow: hidden;
 }
 
 .hundred-board {
+  width: 100%;
+  height: 100%;
+  max-width: 95vmin; /* 保證在直向手機與寬螢幕平板上皆等比例最大化 */
+  max-height: 95vmin;
   display: grid;
   grid-template-columns: repeat(10, 1fr);
   grid-template-rows: repeat(10, 1fr);
-  width: 100%;
-  height: 100%;
-  gap: 4px;
+  gap: 3px;
 }
 
-.cell {
-  background: #f1f5f9;
-  border: 2px solid #cbd5e1;
-  border-radius: 8px;
+/* 單個數字方格：大字體、圓角、可點選 */
+.board-cell {
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 1.15rem;
+  font-size: clamp(0.75rem, 2vmin, 1.25rem);
   font-weight: 800;
   cursor: pointer;
-  transition: transform 0.1s, border-color 0.1s;
+  transition: transform 0.1s, background-color 0.1s;
 }
 
-.cell:active {
-  transform: scale(0.92);
-  border-color: #2563eb;
+.board-cell:active {
+  transform: scale(0.9);
+  background-color: #e2e8f0;
 }
 
-/* 雙位數字色彩分離 */
-.digit-tens {
-  color: var(--color-tens);
-}
+.num-tens { color: var(--tens-color); }
+.num-ones { color: var(--ones-color); }
 
-.digit-ones {
-  color: var(--color-ones);
-}
-
-/* 進階模式：隱藏提示色彩，統一套用深色 */
-.no-color-hints .digit-tens,
-.no-color-hints .digit-ones {
+/* 進階純數字模式：移除顏色提示 */
+.hard-mode .num-tens,
+.hard-mode .num-ones {
   color: #1e293b !important;
 }
 
-.no-color-hints .tag-pill {
-  opacity: 0.15 !important;
-}
-
 /* ==========================================================================
-   第二頁：認讀挑戰區
+   認讀挑戰視圖 (僅有單一「下一題」按鈕)
    ========================================================================== */
-.quiz-content {
+.quiz-stage {
   flex: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 20px;
+  gap: 24px;
+  padding: 10px;
 }
 
-.quiz-prompt {
+.quiz-instruction {
   font-size: 1.5rem;
   font-weight: 800;
-  color: #1e293b;
+  color: #334155;
 }
 
-.quiz-card {
-  width: 320px;
-  height: 180px;
-  background: #ffffff;
+.quiz-big-card {
+  width: min(75vw, 320px);
+  height: min(40vh, 200px);
+  background: white;
   border: 6px solid #cbd5e1;
   border-radius: 28px;
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 7.5rem;
+  font-size: clamp(5rem, 15vmin, 7.5rem);
   font-weight: 900;
   box-shadow: 0 10px 25px rgba(0,0,0,0.08);
 }
 
-.action-row {
+.quiz-control-area {
+  width: min(75vw, 320px);
   display: flex;
-  gap: 24px;
-  width: 100%;
-  max-width: 520px;
+  justify-content: center;
 }
 
-.btn-act {
-  flex: 1;
+/* 極大且容易點選的「下一題」按鈕 */
+.single-next-btn {
+  width: 100%;
   border: none;
-  padding: 16px 20px;
-  font-size: 1.35rem;
-  font-weight: 800;
+  background: var(--btn-green);
   color: white;
-  border-radius: 24px;
+  padding: 18px 24px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  border-radius: 28px;
   cursor: pointer;
-  box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+  box-shadow: 0 6px 16px rgba(46, 125, 50, 0.35);
   transition: transform 0.1s;
 }
 
-.btn-act:active {
+.single-next-btn:active {
   transform: scale(0.95);
 }
 
-.btn-success { background: var(--btn-green); }
-.btn-retry { background: var(--btn-orange); }
-.btn-read { background: var(--btn-blue); }
-.btn-primary { background: #6366f1; }
-
 /* ==========================================================================
-   彈窗與高亮動畫 (Modal & Highlighting)
+   彈窗與高亮動畫 (十位高亮 ➜ 個位高亮)
    ========================================================================== */
-.modal-backdrop {
+.modal-layer {
   display: none;
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
@@ -278,27 +247,29 @@ html, body {
   backdrop-filter: blur(4px);
   justify-content: center;
   align-items: center;
-  z-index: 100;
+  z-index: 1000;
+  padding: 16px;
 }
 
-.modal-backdrop.active {
+.modal-layer.active {
   display: flex;
 }
 
-.modal-box, .feedback-card {
-  background: #ffffff;
-  width: 520px;
-  border-radius: 28px;
-  padding: 24px 32px;
+.inspect-box, .finish-box {
+  background: white;
+  width: 100%;
+  max-width: 440px;
+  border-radius: 24px;
+  padding: 24px;
   text-align: center;
   position: relative;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+  box-shadow: 0 16px 36px rgba(0,0,0,0.25);
 }
 
-.btn-close {
+.modal-close-btn {
   position: absolute;
-  top: 14px;
-  right: 18px;
+  top: 12px;
+  right: 16px;
   font-size: 2rem;
   background: none;
   border: none;
@@ -306,78 +277,73 @@ html, body {
   cursor: pointer;
 }
 
-.zoom-number {
-  font-size: 7.5rem;
+.inspect-big-digits {
+  font-size: clamp(5rem, 20vmin, 7.5rem);
   font-weight: 900;
+  line-height: 1.1;
   margin: 10px 0;
   display: flex;
   justify-content: center;
-  gap: 8px;
+  gap: 4px;
 }
 
-/* 高亮動態效果 */
-.digit-box {
+/* 高亮波紋動畫 */
+.num-tens, .num-ones {
   display: inline-block;
-  padding: 0 8px;
+  padding: 0 6px;
   border-radius: 12px;
   transition: transform 0.25s, background-color 0.25s;
 }
 
-.digit-box.pulse {
-  transform: scale(1.28);
-  background-color: #fef08a; /* 黃色警示高亮底色 */
-  box-shadow: 0 0 20px rgba(253, 224, 71, 0.8);
+.pulse-active {
+  transform: scale(1.25);
+  background-color: #fef08a !important;
+  color: #1e293b !important;
+  box-shadow: 0 0 16px rgba(253, 224, 71, 0.85);
 }
 
-.breakdown-tags {
+.inspect-tags {
   display: flex;
   justify-content: center;
-  gap: 16px;
+  gap: 12px;
   margin-bottom: 12px;
 }
 
-.tag-pill {
-  font-size: 1.15rem;
+.inspect-pill {
+  font-size: 1rem;
   font-weight: 700;
-  padding: 8px 18px;
-  border-radius: 20px;
+  padding: 6px 14px;
+  border-radius: 16px;
+  opacity: 0.35;
   transition: opacity 0.3s;
 }
 
-.tag-tens { background: var(--color-bg-tens); color: var(--color-tens); }
-.tag-ones { background: var(--color-bg-ones); color: var(--color-ones); }
+.inspect-pill.pill-active {
+  opacity: 1;
+}
 
-.modal-tip {
-  font-size: 1.15rem;
+.pill-tens { background: var(--tens-bg); color: var(--tens-color); }
+.pill-ones { background: var(--ones-bg); color: var(--ones-color); }
+
+.inspect-guide {
+  font-size: 1.1rem;
   color: #64748b;
-  margin-bottom: 16px;
   font-weight: bold;
+  margin-bottom: 14px;
 }
 
-/* 正向回饋卡片 */
-.fb-icon {
-  font-size: 4.5rem;
-  margin-bottom: 8px;
+.inspect-audio-btn {
+  border: none;
+  background: #2563eb;
+  color: white;
+  padding: 12px 24px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border-radius: 20px;
+  cursor: pointer;
 }
 
-.fb-title {
-  font-size: 2rem;
-  color: #1e293b;
-  margin-bottom: 8px;
-}
-
-.fb-msg {
-  font-size: 1.3rem;
-  color: #475569;
-  font-weight: 600;
-  margin-bottom: 22px;
-}
-
-.feedback-actions {
-  display: flex;
-  justify-content: center;
-}
-
-.hide {
-  display: none !important;
-}
+/* 完成挑戰卡片 */
+.finish-badge { font-size: 4.5rem; margin-bottom: 10px; }
+.finish-title { font-size: 1.8rem; color: #1e293b; margin-bottom: 10px; }
+.finish-desc { font-size: 1.2rem; color: #475569; margin-bottom: 24px; line-height: 1.4; }
