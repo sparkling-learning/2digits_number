@@ -1,5 +1,4 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // --- 狀態控制 ---
   let isHardMode = false;
   let currentStep = 1;
   let targetNumber = 10;
@@ -23,7 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch(e) {}
   }
 
-  // DOM 節點引用
+  // DOM 節點
   const boardEl = document.getElementById("hundred-board");
   const viewGrid = document.getElementById("view-grid");
   const viewQuiz = document.getElementById("view-quiz");
@@ -32,12 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnToQuiz = document.getElementById("btn-to-quiz");
   const btnToGrid = document.getElementById("btn-to-grid");
 
-  // 捲動按鈕節點
-  const btnScrollUp = document.getElementById("btn-scroll-up");
-  const btnScrollDown = document.getElementById("btn-scroll-down");
-  const scrollThumb = document.getElementById("scroll-thumb");
-
-  // 放大檢視彈窗節點
+  // 放大彈窗節點
   const inspectModal = document.getElementById("inspect-modal");
   const btnCloseInspect = document.getElementById("btn-close-inspect");
   const inspectT = document.getElementById("inspect-t");
@@ -91,36 +85,6 @@ document.addEventListener("DOMContentLoaded", () => {
       cell.addEventListener("pointerdown", () => inspectNumber(i));
       boardEl.appendChild(cell);
     }
-  }
-
-  // 每次精確滾動 3 行
-  function scrollBoardByRows(direction = 1) {
-    if (!boardEl) return;
-    const firstCell = boardEl.querySelector(".board-cell");
-    if (!firstCell) return;
-    
-    const cellHeight = firstCell.getBoundingClientRect().height;
-    const computedGap = parseFloat(window.getComputedStyle(boardEl).rowGap) || 8;
-    const distance = (cellHeight + computedGap) * 3;
-    
-    boardEl.scrollBy({
-      top: distance * direction,
-      behavior: "smooth"
-    });
-  }
-
-  // 右側滾動按鈕事件
-  if (btnScrollUp) btnScrollUp.addEventListener("pointerdown", () => scrollBoardByRows(-1));
-  if (btnScrollDown) btnScrollDown.addEventListener("pointerdown", () => scrollBoardByRows(1));
-
-  // 更新右側滑塊指示條位置
-  if (boardEl && scrollThumb) {
-    boardEl.addEventListener("scroll", () => {
-      const maxScroll = boardEl.scrollHeight - boardEl.clientHeight;
-      if (maxScroll <= 0) return;
-      const progress = boardEl.scrollTop / maxScroll;
-      scrollThumb.style.top = `${progress * 70}%`;
-    });
   }
 
   // 生成十位數柱
@@ -193,7 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
       setTimeout(() => {
         inspectO.classList.remove("pulse-active");
         blockOnes.classList.remove("block-active");
-        inspectStatusText.textContent = `合起來讀作：${num}。`;
+        inspectStatusText.textContent = `合起來讀作：${num}，請讀出數字！`;
       }, 3600);
     } else {
       setTimeout(() => {
@@ -276,6 +240,6 @@ document.addEventListener("DOMContentLoaded", () => {
     startQuiz();
   });
 
-  // 初始繪製百格圖
+  // 初始繪製
   renderHundredBoard();
 });
