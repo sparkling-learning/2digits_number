@@ -3,32 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>雙位數認讀 </title>
+  <title>幼兒雙位數認讀冒險 - 百格圖3行模式</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="app-wrapper">
-    <!-- 頂部資訊列 -->
+    <!-- 頂部列：標題與雙層次難度切換 -->
     <header class="top-nav">
-      <h1 class="app-title">🔢 雙位數認讀</h1>
+      <h1 class="app-title">🔢 雙位數認讀樂園</h1>
       <div class="diff-switch">
         <button id="btn-easy" class="mode-btn active">初階 (色彩輔助)</button>
         <button id="btn-hard" class="mode-btn">進階 (純數字)</button>
       </div>
     </header>
 
-    <!-- 頁面 1：1-100 百格圖探索 -->
+    <!-- 第一頁：百格圖 (每次顯示3行，下捲顯示另外3行) -->
     <section id="view-grid" class="view-panel active">
       <div class="view-toolbar">
-        <span class="view-hint">點選任意數字，看看十位與個位！</span>
+        <span class="view-hint">👇 每次看 3 行，下捲看更多數字！</span>
         <button id="btn-to-quiz" class="action-btn link-btn">挑戰認讀 ➔</button>
       </div>
-      <div class="grid-card-container">
+
+      <!-- 視窗容器：固定剛好 3 行數字的高度 -->
+      <div class="scroll-window-container">
         <div id="hundred-board" class="hundred-board"></div>
       </div>
     </section>
 
-    <!-- 頁面 2：隨機 10 題認讀挑戰 (下方只有「下一題」按鈕) -->
+    <!-- 第二頁：認讀挑戰 (下方只有一個大「下一題」按鈕) -->
     <section id="view-quiz" class="view-panel">
       <div class="view-toolbar">
         <button id="btn-to-grid" class="action-btn back-btn">⬅ 返回百格圖</button>
@@ -37,19 +39,18 @@
       <div class="quiz-stage">
         <p class="quiz-instruction">請大聲讀出這個數字：</p>
         
-        <!-- 核心大數字展示區 -->
+        <!-- 大數字展示區：十位與個位靠緊，字體放大10% -->
         <div id="quiz-number-box" class="quiz-big-card">
           <span id="quiz-t" class="num-tens">0</span><span id="quiz-o" class="num-ones">0</span>
         </div>
 
-        <!-- 認讀數字下方：僅保留單一「下一題」大按鈕 -->
         <div class="quiz-control-area">
           <button id="btn-next-question" class="single-next-btn">下一題 ➔</button>
         </div>
       </div>
     </section>
 
-    <!-- 第一頁：點選數字放大、十位高亮、個位高亮彈窗 -->
+    <!-- 彈窗：點選數字放大並依序高亮十位與個位 -->
     <div id="inspect-modal" class="modal-layer">
       <div class="inspect-box">
         <button id="btn-close-inspect" class="modal-close-btn" aria-label="關閉">×</button>
@@ -65,12 +66,12 @@
       </div>
     </div>
 
-    <!-- 通關讚賞彈窗 (正向教育反饋) -->
+    <!-- 通關讚賞彈窗 (正向教育成長型反饋) -->
     <div id="finish-modal" class="modal-layer">
       <div class="finish-box">
         <div class="finish-badge">🏆</div>
         <h2 class="finish-title">恭喜完成挑戰！</h2>
-        <p class="finish-desc">你完成了 10 題認讀！你真努力，有進步！🌟</p>
+        <p class="finish-desc">你成功完成了 10 題認讀！欣賞你的專注與勇氣，你真是一位不怕困難的小勇士！🌟</p>
         <button id="btn-restart-game" class="single-next-btn">🔄 再玩一次</button>
       </div>
     </div>
