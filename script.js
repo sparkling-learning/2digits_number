@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let targetNumber = 10;
   let questionPool = [];
 
-  // 音訊合成器 (支援 iOS 與 Android 離線低延遲播放)
+  // 音訊合成器 (支援跨裝置離線低延遲提示聲)
   const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   function playTone(freq, type, duration) {
     if (audioCtx.state === "suspended") audioCtx.resume();
@@ -35,10 +35,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnCloseInspect = document.getElementById("btn-close-inspect");
   const inspectT = document.getElementById("inspect-t");
   const inspectO = document.getElementById("inspect-o");
-  const pillTens = document.getElementById("pill-tens");
-  const pillOnes = document.getElementById("pill-ones");
+  
+  const blockTens = document.getElementById("block-tens");
+  const blockOnes = document.getElementById("block-ones");
   const valTensTxt = document.getElementById("val-tens-txt");
   const valOnesTxt = document.getElementById("val-ones-txt");
+  const tensRodsCanvas = document.getElementById("tens-rods-canvas");
+  const onesCubesCanvas = document.getElementById("ones-cubes-canvas");
+
   const inspectStatusText = document.getElementById("inspect-status-text");
   const btnReadAgain = document.getElementById("btn-read-again");
 
@@ -64,7 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================================================================
-  // 1. 建構百格圖 (1-100)，每格內十位與個位靠緊，字體放大10%
+  // 1. 建構百格圖 (1-100)
   // ==========================================================================
   function renderHundredBoard() {
     boardEl.innerHTML = "";
@@ -91,13 +95,37 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>`;
       }
 
-      // 支援觸控與滑鼠雙事件
       cell.addEventListener("pointerdown", () => inspectNumber(i));
       boardEl.appendChild(cell);
     }
   }
 
-  // 點選數字：放大並依序高亮（十位 ➜ 個位 ➜ 完整讀出）
+  // 動態生成數柱（1 條 10 粒）
+  function renderTensRods(count) {
+    tensRodsCanvas.innerHTML = "";
+    for (let r = 0; r < count; r++) {
+      const rod = document.createElement("div");
+      rod.className = "rod-pillar";
+      for (let dot = 0; dot < 10; dot++) {
+        const dotEl = document.createElement("div");
+        dotEl.className = "rod-unit-dot";
+        rod.appendChild(dotEl);
+      }
+      tensRodsCanvas.appendChild(rod);
+    }
+  }
+
+  // 動態生成數粒（1 個 1 粒）
+  function renderOnesCubes(count) {
+    onesCubesCanvas.innerHTML = "";
+    for (let c = 0; c < count; c++) {
+      const cube = document.createElement("div");
+      cube.className = "cube-unit";
+      onesCubesCanvas.appendChild(cube);
+    }
+  }
+
+  // 點選數字：放大並依序高亮（十位數柱 ➜ 個位數粒 ➜ 完整讀出）
   function inspectNumber(num) {
     playTone(440, "sine", 0.1);
     targetNumber = num;
@@ -110,44 +138,60 @@ document.addEventListener("DOMContentLoaded", () => {
     valTensTxt.textContent = t;
     valOnesTxt.textContent = o;
 
+    // 繪製蒙特梭利具象數柱與數粒
+    renderTensRods(t);
+    renderOnesCubes(o);
+
+    // 重置動畫與高亮標記
     inspectT.classList.remove("pulse-active");
     inspectO.classList.remove("pulse-active");
-    pillTens.classList.remove("pill-active");
-    pillOnes.classList.remove("pill-active");
+    blockTens.classList.remove("block-active");
+    blockOnes.classList.remove("block-active");
 
     inspectModal.classList.add("active");
 
     if (num >= 10) {
-      inspectStatusText.textContent = "觀察十位數...";
+      inspectStatusText.textContent = `十位是 ${t}，看淡藍色方塊！`;
+      // 0.3秒後：高亮十位與數柱
       setTimeout(() => {
         inspectT.classList.add("pulse-active");
-        pillTens.classList.add("pill-active");
+        blockTens.classList.add("block-active");
         playTone(330, "triangle", 0.2);
-        speakWord(`${t * 10}`);
-        inspectStatusText.textContent = `十位是 ${t}，表示 ${t * 10}`;
+        speakWord(`${t}個十，代表${t * 10}粒`);
+        inspectStatusText.textContent = `十位是 ${t}：有 ${t} 條數柱，每條 10 粒，代表 ${t * 10}！`;
       }, 300);
 
+      // 1.8秒後：高亮個位與數粒
       setTimeout(() => {
         inspectT.classList.remove("pulse-active");
-        inspectO.classList.add("pulse-active");
-        pillOnes.classList.add("pill-active");
-        playTone(660, "triangle", 0.2);
-        if (o > 0) speakWord(`${o}`);
-        inspectStatusText.textContent = `個位是 ${o}，表示 ${o}`;
-      }, 1600);
+        blockTens.classList.remove("block-active");
 
+        inspectO.classList.add("pulse-active");
+        blockOnes.classList.add("block-active");
+        playTone(660, "triangle", 0.2);
+        if (o > 0) {
+          speakWord(`${o}個一，代表${o}粒`);
+          inspectStatusText.textContent = `個位是 ${o}：有 ${o} 顆數粒，每顆 1 粒，代表 ${o}！`;
+        } else {
+          speakWord("0個一");
+          inspectStatusText.textContent = "個位是 0：沒有多出來的單粒！";
+        }
+      }, 2000);
+
+      // 3.5秒後：合讀
       setTimeout(() => {
         inspectO.classList.remove("pulse-active");
+        blockOnes.classList.remove("block-active");
         inspectStatusText.textContent = `合起來讀作：${num}`;
         speakWord(`${num}`);
-      }, 2800);
+      }, 3600);
     } else {
       setTimeout(() => {
         inspectO.classList.add("pulse-active");
-        pillOnes.classList.add("pill-active");
+        blockOnes.classList.add("block-active");
         playTone(660, "triangle", 0.2);
-        speakWord(`${num}`);
-        inspectStatusText.textContent = `這是個位數：${num}`;
+        speakWord(`${num}個一`);
+        inspectStatusText.textContent = `個位是 ${num}：有 ${num} 顆數粒！`;
       }, 300);
     }
   }
@@ -188,7 +232,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ==========================================================================
-  // 3. 認讀挑戰邏輯 (共10題，手動按「下一題」推進)
+  // 3. 認讀挑戰邏輯 (共10題，單一「下一題」按鈕)
   // ==========================================================================
   function startQuiz() {
     currentStep = 1;
@@ -212,7 +256,6 @@ document.addEventListener("DOMContentLoaded", () => {
     quizO.textContent = targetNumber % 10;
   }
 
-  // 手動按下一題
   btnNextQuestion.addEventListener("pointerdown", () => {
     playTone(587, "sine", 0.12);
     currentStep++;
@@ -224,6 +267,6 @@ document.addEventListener("DOMContentLoaded", () => {
     startQuiz();
   });
 
-  // 初始化繪製
+  // 初始繪製
   renderHundredBoard();
 });
