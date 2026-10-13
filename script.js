@@ -1,393 +1,309 @@
-/**
- * 認識月曆與心情 - SEN 幼兒互動遊戲
- * 特色：點選心情直接呈現（免拉放）、未選中卡片變淡灰、月曆當天同步顯示、句子點擊精準發光
- */
+document.addEventListener("DOMContentLoaded", () => {
+  // ==========================================================================
+  // 1. 全螢幕動態適配 (Letterbox Viewport Scaling)
+  // ==========================================================================
+  const scaler = document.getElementById("viewport-scaler");
+  const baseWidth = 960;
+  const baseHeight = 640;
 
-const WEEKDAYS = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-
-// 當天真實系統時間
-function getTodayInfo() {
-  const now = new Date();
-  return {
-    year: now.getFullYear(),
-    month: now.getMonth() + 1,
-    day: now.getDate(),
-    weekday: WEEKDAYS[now.getDay()],
-    dayIdx: now.getDay()
-  };
-}
-
-let today = getTodayInfo();
-let currentMode = 'easy'; // 'easy' 或 'hard'
-
-let state = {
-  dateMatched: { year: false, month: false, day: false, weekday: false },
-  selectedCardId: null,
-  isDateStepFinished: false,
-  selectedMood: null
-};
-
-// DOM 元素引用
-const container = document.querySelector('.game-container');
-const feedbackBanner = document.getElementById('feedback-banner');
-const cardYear = document.getElementById('card-year');
-const cardMonth = document.getElementById('card-month');
-const calGrid = document.getElementById('cal-grid');
-const moodSection = document.getElementById('mood-section');
-const moodDeck = document.getElementById('mood-deck');
-const moodPromptTitle = document.getElementById('mood-prompt-title');
-const btnRestart = document.getElementById('btn-restart');
-const btnModeEasy = document.getElementById('btn-mode-easy');
-const btnModeHard = document.getElementById('btn-mode-hard');
-
-// 正向教育回饋提示列
-function notifyFeedback(text, type = 'normal') {
-  feedbackBanner.textContent = text;
-  feedbackBanner.className = 'feedback-banner';
-  if (type === 'try-again') feedbackBanner.classList.add('try-again');
-  if (type === 'success') feedbackBanner.classList.add('step-correct');
-}
-
-// 建立月曆板
-function renderCalendarPlate() {
-  cardYear.textContent = `${today.year}年`;
-  cardMonth.textContent = `${today.month}月`;
-  cardYear.className = 'source-card card-year';
-  cardMonth.className = 'source-card card-month';
-
-  bindUniversalDrag(cardYear, handleDateMatch);
-  bindUniversalDrag(cardMonth, handleDateMatch);
-
-  calGrid.innerHTML = '';
-
-  // 星期標題
-  WEEKDAYS.forEach((w, idx) => {
-    if (idx === today.dayIdx) {
-      const wCard = document.createElement('div');
-      wCard.className = 'source-card card-weekday';
-      wCard.id = 'card-weekday';
-      wCard.setAttribute('data-type', 'weekday');
-      wCard.textContent = w;
-      if (state.dateMatched.weekday) {
-        wCard.classList.add('placed');
-      }
-      bindUniversalDrag(wCard, handleDateMatch);
-      calGrid.appendChild(wCard);
-    } else {
-      const wCell = document.createElement('div');
-      wCell.className = 'grid-cell week-header';
-      wCell.textContent = w;
-      calGrid.appendChild(wCell);
-    }
-  });
-
-  const firstDayOfWeek = new Date(today.year, today.month - 1, 1).getDay();
-  const daysInMonth = new Date(today.year, today.month, 0).getDate();
-
-  for (let b = 0; b < firstDayOfWeek; b++) {
-    const blank = document.createElement('div');
-    blank.className = 'grid-cell';
-    calGrid.appendChild(blank);
+  function resizeStage() {
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    // 計算最小縮放比，確保 960x640 完整可見且完全等比例居中
+    const scale = Math.min(windowWidth / baseWidth, windowHeight / baseHeight);
+    scaler.style.transform = `scale(${scale})`;
   }
 
-  // 日期格
-  for (let d = 1; d <= daysInMonth; d++) {
-    if (d === today.day) {
-      if (!state.isDateStepFinished) {
-        // 第一階段：可拖曳日期卡
-        const dayCard = document.createElement('div');
-        dayCard.className = 'source-card card-day';
-        dayCard.id = 'card-day';
-        dayCard.setAttribute('data-type', 'day');
-        dayCard.textContent = `${d}日`;
-        if (state.dateMatched.day) {
-          dayCard.classList.add('placed');
-        }
-        bindUniversalDrag(dayCard, handleDateMatch);
-        calGrid.appendChild(dayCard);
+  window.addEventListener("resize", resizeStage);
+  window.addEventListener("orientationchange", resizeStage);
+  resizeStage();
+
+  // ==========================================================================
+  // 2. 輕量化音效生成器 (Web Audio API)
+  // ==========================================================================
+  const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+  function playTone(freq, type, duration) {
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + duration);
+  }
+
+  function soundClick() { playTone(440, "sine", 0.1); }
+  function soundStepTens() { playTone(330, "triangle", 0.2); }
+  function soundStepOnes() { playTone(660, "triangle", 0.2); }
+  function soundSuccess() {
+    playTone(523.25, "sine", 0.15);
+    setTimeout(() => playTone(659.25, "sine", 0.15), 100);
+    setTimeout(() => playTone(783.99, "sine", 0.25), 200);
+  }
+
+  // ==========================================================================
+  // 3. 狀態與元素引用
+  // ==========================================================================
+  let isAdvancedMode = false;
+  let currentStep = 1;
+  let targetNumber = 10;
+  let questionPool = [];
+
+  // DOM 節點
+  const gridStage = document.getElementById("game-stage");
+  const gridBoard = document.getElementById("hundred-board");
+  const pageGrid = document.getElementById("page-grid");
+  const pageQuiz = document.getElementById("page-quiz");
+  const btnGotoChallenge = document.getElementById("btn-goto-challenge");
+  const btnGotoGrid = document.getElementById("btn-goto-grid");
+
+  const btnModeEasy = document.getElementById("btn-mode-easy");
+  const btnModeHard = document.getElementById("btn-mode-hard");
+
+  // 第一頁 彈窗元素
+  const modalInspect = document.getElementById("modal-inspect");
+  const btnCloseInspect = document.getElementById("btn-close-inspect");
+  const zoomTens = document.getElementById("zoom-tens");
+  const zoomOnes = document.getElementById("zoom-ones");
+  const valTens = document.getElementById("val-tens");
+  const valOnes = document.getElementById("val-ones");
+  const readPromptText = document.getElementById("read-prompt-text");
+  const btnReplayRead = document.getElementById("btn-replay-read");
+
+  // 第二頁 挑戰元素
+  const quizIndex = document.getElementById("quiz-index");
+  const quizTens = document.getElementById("quiz-tens");
+  const quizOnes = document.getElementById("quiz-ones");
+  const btnPass = document.getElementById("btn-pass");
+  const btnTryAgain = document.getElementById("btn-try-again");
+
+  // 正向反饋彈窗
+  const modalFeedback = document.getElementById("modal-feedback");
+  const fbIcon = document.getElementById("fb-icon");
+  const fbTitle = document.getElementById("fb-title");
+  const fbMessage = document.getElementById("fb-message");
+  const btnFbNext = document.getElementById("btn-fb-next");
+  const btnFbReplay = document.getElementById("btn-fb-replay");
+
+  // ==========================================================================
+  // 4. 正向語句庫與朗讀模組
+  // ==========================================================================
+  const praises = [
+    "太棒了！你做到了！🌟",
+    "好厲害，你對雙位數越來越熟悉了！🎉",
+    "欣賞你的專注與努力！❤️",
+    "朗讀得真清晰，你真優秀！✨",
+    "一步一步來，你做得非常好！🚀"
+  ];
+
+  function speakText(text) {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "zh-HK"; // 可換為 zh-TW 或 zh-CN
+      utterance.rate = 0.8;
+      window.speechSynthesis.speak(utterance);
+    }
+  }
+
+  // ==========================================================================
+  // 5. 初始化百格圖 (1-100)
+  // ==========================================================================
+  function buildHundredGrid() {
+    gridBoard.innerHTML = "";
+    for (let i = 1; i <= 100; i++) {
+      const cell = document.createElement("div");
+      cell.className = "cell";
+
+      if (i < 10) {
+        cell.innerHTML = `<span class="digit-ones">${i}</span>`;
+      } else if (i === 100) {
+        cell.innerHTML = `<span class="digit-tens">10</span><span class="digit-ones">0</span>`;
       } else {
-        // 第二階段：當天格子直接同步顯示心情
-        const targetCell = document.createElement('div');
-        targetCell.className = 'grid-cell today-slot';
-        targetCell.id = 'today-mood-slot';
-        targetCell.setAttribute('data-day', d);
-
-        if (state.selectedMood) {
-          targetCell.classList.add('mood-filled');
-          targetCell.innerHTML = `<span>${d}日</span><span style="font-size:1.8rem">${state.selectedMood.emoji}</span>`;
-        } else {
-          targetCell.innerHTML = `<span>${d}日</span><small>今天</small>`;
-        }
-        calGrid.appendChild(targetCell);
+        const tens = Math.floor(i / 10);
+        const ones = i % 10;
+        cell.innerHTML = `<span class="digit-tens">${tens}</span><span class="digit-ones">${ones}</span>`;
       }
+
+      // 觸控與點擊通用綁定
+      cell.addEventListener("pointerdown", () => inspectNumber(i));
+      gridBoard.appendChild(cell);
+    }
+  }
+
+  // 點選數字：放大 ➜ 十位高亮 ➜ 個位高亮 ➜ 完整引導
+  function inspectNumber(num) {
+    soundClick();
+    targetNumber = num;
+    let t = Math.floor(num / 10);
+    let o = num % 10;
+
+    if (num === 100) {
+      t = 10; o = 0;
+    }
+
+    zoomTens.textContent = num < 10 ? "" : t;
+    zoomOnes.textContent = o;
+    valTens.textContent = t;
+    valOnes.textContent = o;
+
+    // 清除既有動畫
+    zoomTens.classList.remove("pulse");
+    zoomOnes.classList.remove("pulse");
+    readPromptText.textContent = "請看十位數...";
+    modalInspect.classList.add("active");
+
+    // 時序引導
+    if (num >= 10) {
+      setTimeout(() => {
+        zoomTens.classList.add("pulse");
+        soundStepTens();
+        speakText(`${t * 10}`);
+        readPromptText.textContent = `十位是 ${t}，表示 ${t * 10}`;
+      }, 300);
+
+      setTimeout(() => {
+        zoomTens.classList.remove("pulse");
+        zoomOnes.classList.add("pulse");
+        soundStepOnes();
+        if (o > 0) speakText(`${o}`);
+        readPromptText.textContent = `個位是 ${o}，表示 ${o}`;
+      }, 1500);
+
+      setTimeout(() => {
+        zoomOnes.classList.remove("pulse");
+        readPromptText.textContent = `合起來讀作：${num}`;
+        speakText(`${num}`);
+      }, 2700);
     } else {
-      const dCell = document.createElement('div');
-      dCell.className = 'grid-cell';
-      dCell.textContent = d;
-      calGrid.appendChild(dCell);
+      setTimeout(() => {
+        zoomOnes.classList.add("pulse");
+        soundStepOnes();
+        speakText(`${num}`);
+        readPromptText.textContent = `這是個位數：${num}`;
+      }, 300);
     }
   }
-}
 
-// 支援第一階段「拖曳與點擊」字卡
-function bindUniversalDrag(element, onDropCallback) {
-  let touchStartX = 0;
-  let touchStartY = 0;
-  let isDragging = false;
-
-  element.onclick = () => {
-    if (isDragging || element.classList.contains('placed')) return;
-    document.querySelectorAll('.source-card').forEach(c => c.classList.remove('selected-tap'));
-    element.classList.add('selected-tap');
-    state.selectedCardId = element.id;
-    notifyFeedback(`選好囉！請點選目標空格放進去！`);
-  };
-
-  element.ontouchstart = (e) => {
-    if (element.classList.contains('placed')) return;
-    isDragging = false;
-    const t = e.touches[0];
-    touchStartX = t.clientX;
-    touchStartY = t.clientY;
-    element.classList.add('dragging');
-  };
-
-  element.ontouchmove = (e) => {
-    if (element.classList.contains('placed')) return;
-    const t = e.touches[0];
-    if (Math.abs(t.clientX - touchStartX) > 8 || Math.abs(t.clientY - touchStartY) > 8) {
-      isDragging = true;
-    }
-    element.style.position = 'fixed';
-    element.style.left = `${t.clientX - 50}px`;
-    element.style.top = `${t.clientY - 30}px`;
-    element.style.zIndex = '1000';
-  };
-
-  element.ontouchend = (e) => {
-    if (element.classList.contains('placed')) return;
-    element.classList.remove('dragging');
-    const t = e.changedTouches[0];
-    element.style.position = '';
-    element.style.left = '';
-    element.style.top = '';
-    element.style.zIndex = '';
-
-    const hitEl = document.elementFromPoint(t.clientX, t.clientY);
-    const dropTarget = hitEl ? hitEl.closest('.sentence-slot') : null;
-
-    if (dropTarget) {
-      onDropCallback(element, dropTarget);
-    }
-    setTimeout(() => { isDragging = false; }, 50);
-  };
-}
-
-// 監聽句子填空空格點選
-function setupSentenceSlots() {
-  document.querySelectorAll('.sentence-slot').forEach(slot => {
-    slot.onclick = () => {
-      const slotType = slot.getAttribute('data-type');
-      if (slot.classList.contains('filled')) {
-        flashCalendarSource(slotType);
-        return;
-      }
-
-      if (state.selectedCardId) {
-        const card = document.getElementById(state.selectedCardId);
-        if (card && card.classList.contains('source-card')) {
-          handleDateMatch(card, slot);
-        }
-      }
-    };
-    slot.ondragover = (e) => e.preventDefault();
+  btnCloseInspect.addEventListener("pointerdown", () => {
+    modalInspect.classList.remove("active");
   });
-}
 
-// 配對判定 (月曆 -> 句子)
-function handleDateMatch(card, slot) {
-  const cardType = card.getAttribute('data-type');
-  const slotType = slot.getAttribute('data-type');
+  btnReplayRead.addEventListener("pointerdown", () => {
+    inspectNumber(targetNumber);
+  });
 
-  if (cardType === slotType) {
-    slot.textContent = card.textContent;
-    slot.classList.add('filled');
-    card.classList.add('placed');
-    state.dateMatched[cardType] = true;
-    state.selectedCardId = null;
-
-    notifyFeedback(`好棒的觀察！成功把「${card.textContent}」放進句子裡！`, 'success');
-    flashCalendarSource(cardType);
-    checkDateStepComplete();
-  } else {
-    notifyFeedback('欣賞你努力、再試一次', 'try-again');
-    if (state.selectedCardId) {
-      card.classList.remove('selected-tap');
-      state.selectedCardId = null;
+  // ==========================================================================
+  // 6. 難度切換與挑戰模式控制
+  // ==========================================================================
+  function setMode(advanced) {
+    isAdvancedMode = advanced;
+    if (isAdvancedMode) {
+      btnModeHard.classList.add("active");
+      btnModeEasy.classList.remove("active");
+      gridStage.classList.add("no-color-hints");
+    } else {
+      btnModeEasy.classList.add("active");
+      btnModeHard.classList.remove("active");
+      gridStage.classList.remove("no-color-hints");
     }
   }
-}
 
-// 點擊句子時，月曆中對應卡片同步發光
-function flashCalendarSource(type) {
-  let targetEl = null;
+  btnModeEasy.addEventListener("pointerdown", () => setMode(false));
+  btnModeHard.addEventListener("pointerdown", () => setMode(true));
 
-  if (type === 'year') {
-    targetEl = document.getElementById('card-year');
-  } else if (type === 'month') {
-    targetEl = document.getElementById('card-month');
-  } else if (type === 'day') {
-    targetEl = document.getElementById('card-day') || document.getElementById('today-mood-slot');
-  } else if (type === 'weekday') {
-    targetEl = document.getElementById('card-weekday');
+  btnGotoChallenge.addEventListener("pointerdown", () => {
+    soundClick();
+    pageGrid.classList.remove("active");
+    pageQuiz.classList.add("active");
+    initQuiz();
+  });
+
+  btnGotoGrid.addEventListener("pointerdown", () => {
+    soundClick();
+    pageQuiz.classList.remove("active");
+    pageGrid.classList.add("active");
+  });
+
+  function initQuiz() {
+    currentStep = 1;
+    questionPool = [];
+    while (questionPool.length < 10) {
+      const rand = Math.floor(Math.random() * 90) + 10; // 雙位數 10-99
+      if (!questionPool.includes(rand)) questionPool.push(rand);
+    }
+    loadQuizQuestion();
   }
 
-  if (targetEl) {
-    document.querySelectorAll('.source-card, .grid-cell').forEach(el => {
-      el.classList.remove('flash-focus');
-    });
+  function loadQuizQuestion() {
+    if (currentStep > 10) {
+      finishAllQuiz();
+      return;
+    }
+    quizIndex.textContent = currentStep;
+    targetNumber = questionPool[currentStep - 1];
+    const t = Math.floor(targetNumber / 10);
+    const o = targetNumber % 10;
+    quizTens.textContent = t;
+    quizOnes.textContent = o;
+  }
 
-    targetEl.classList.add('flash-focus');
+  // 正確按鈕：「我讀對了！」
+  btnPass.addEventListener("pointerdown", () => {
+    soundSuccess();
+    const praise = praises[Math.floor(Math.random() * praises.length)];
+    fbIcon.textContent = "🌟";
+    fbTitle.textContent = "太厲害了！";
+    fbMessage.textContent = praise;
+    btnFbNext.classList.remove("hide");
+    btnFbReplay.classList.add("hide");
+    modalFeedback.classList.add("active");
+  });
+
+  // 嘗試/錯誤回饋：「欣賞你努力、再試一次」
+  btnTryAgain.addEventListener("pointerdown", () => {
+    soundClick();
+    fbIcon.textContent = "💪";
+    fbTitle.textContent = "加油！";
+    fbMessage.textContent = "欣賞你努力、再試一次！";
+    btnFbNext.classList.add("hide");
+    btnFbReplay.classList.add("hide");
+    modalFeedback.classList.add("active");
+
     setTimeout(() => {
-      targetEl.classList.remove('flash-focus');
+      modalFeedback.classList.remove("active");
     }, 1800);
-  }
-}
-
-// 句子完成 -> 開啟心情選取
-function checkDateStepComplete() {
-  const isAll = Object.values(state.dateMatched).every(Boolean);
-  if (isAll) {
-    state.isDateStepFinished = true;
-    document.getElementById('sentence-guide-txt').textContent = '🗣️ 太棒了！請讀一讀句子，點擊「年、月、日、星期」觀察月曆哪裡在發光：';
-    notifyFeedback('太棒了！句子填好囉！現在請點選今天的心情！', 'success');
-
-    moodSection.classList.remove('hidden');
-    renderCalendarPlate();
-    renderMoodDeck();
-  }
-}
-
-// ===================================================
-// 心情選取互動核心：無需拖曳，直接點選切換
-// ===================================================
-function renderMoodDeck() {
-  moodDeck.innerHTML = '';
-
-  const easyMoods = [
-    { id: 'm-happy', emoji: '😊', label: '開心' },
-    { id: 'm-sad', emoji: '😢', label: '傷心' },
-    { id: 'm-angry', emoji: '😡', label: '生氣' },
-    { id: 'm-scared', emoji: '😨', label: '害怕' }
-  ];
-
-  const advancedMoods = [
-    ...easyMoods,
-    { id: 'm-disappointed', emoji: '😞', label: '失望' },
-    { id: 'm-nervous', emoji: '😬', label: '緊張' },
-    { id: 'm-excited', emoji: '🤩', label: '興奮' },
-    { id: 'm-worried', emoji: '😟', label: '擔心' }
-  ];
-
-  const list = currentMode === 'easy' ? easyMoods : advancedMoods;
-
-  list.forEach(m => {
-    const card = document.createElement('div');
-    card.className = 'mood-card';
-    card.id = m.id;
-    card.setAttribute('data-emoji', m.emoji);
-    card.setAttribute('data-label', m.label);
-    card.innerHTML = `<span class="mood-emoji">${m.emoji}</span><span>${m.label}</span>`;
-
-    // 幼兒點擊心情卡片即完成選取
-    card.onclick = () => handleMoodSelect(m, card);
-
-    moodDeck.appendChild(card);
-  });
-}
-
-// 處理心情點選邏輯
-function handleMoodSelect(moodData, clickedCard) {
-  state.selectedMood = moodData;
-
-  // 1. 下方卡片視覺切換：被選中的高亮，其餘變淡灰色
-  document.querySelectorAll('.mood-card').forEach(card => {
-    if (card.id === clickedCard.id) {
-      card.classList.remove('dimmed');
-      card.classList.add('selected-active');
-    } else {
-      card.classList.remove('selected-active');
-      card.classList.add('dimmed');
-    }
   });
 
-  // 2. 同時於當天的月曆格子中顯示心情卡片
-  const todaySlot = document.getElementById('today-mood-slot');
-  if (todaySlot) {
-    todaySlot.classList.add('mood-filled');
-    todaySlot.innerHTML = `<span>${today.day}日</span><span style="font-size:1.8rem">${moodData.emoji}</span>`;
-  }
-
-  // 3. 更新提示引導與正向肯定，完整保留畫面讓幼兒分享
-  moodPromptTitle.textContent = `💖 今天的心情是「${moodData.label} ${moodData.emoji}」！請小朋友和大家分享一下原因吧：`;
-  notifyFeedback(`太棒了！今天的心情是「${moodData.label}」！你做得非常好！`, 'success');
-}
-
-// 重啟遊戲
-function resetGameFull() {
-  today = getTodayInfo();
-  state = {
-    dateMatched: { year: false, month: false, day: false, weekday: false },
-    selectedCardId: null,
-    isDateStepFinished: false,
-    selectedMood: null
-  };
-
-  document.getElementById('target-year').textContent = '____年';
-  document.getElementById('target-month').textContent = '____月';
-  document.getElementById('target-day').textContent = '____日';
-  document.getElementById('target-weekday').textContent = '星期____';
-
-  document.querySelectorAll('.sentence-slot').forEach(s => {
-    s.classList.remove('filled');
+  btnFbNext.addEventListener("pointerdown", () => {
+    modalFeedback.classList.remove("active");
+    currentStep++;
+    loadQuizQuestion();
   });
 
-  document.getElementById('sentence-guide-txt').textContent = '🗣️ 請把月曆上的字卡拖進句子空格裡，完成後點擊字詞觀察月曆發光：';
-  moodPromptTitle.textContent = '💖 今天的心情怎麼樣？請點選下方的心情卡片：';
-  moodSection.classList.add('hidden');
-  moodDeck.innerHTML = '';
-
-  notifyFeedback('請在月曆中找出正確卡片，拉到句子裡！');
-
-  if (currentMode === 'easy') {
-    container.classList.add('easy-mode');
-  } else {
-    container.classList.remove('easy-mode');
+  // 通關大獎
+  function finishAllQuiz() {
+    soundSuccess();
+    fbIcon.textContent = "🏆";
+    fbTitle.textContent = "挑戰完成！";
+    fbMessage.textContent = "恭喜你讀完 10 個雙位數！你是個不怕困難的小勇士！";
+    btnFbNext.classList.add("hide");
+    btnFbReplay.classList.remove("hide");
+    modalFeedback.classList.add("active");
   }
 
-  renderCalendarPlate();
-  setupSentenceSlots();
-}
+  btnFbReplay.addEventListener("pointerdown", () => {
+    modalFeedback.classList.remove("active");
+    initQuiz();
+  });
 
-// 難度切換
-btnModeEasy.onclick = () => {
-  currentMode = 'easy';
-  btnModeEasy.classList.add('active');
-  btnModeHard.classList.remove('active');
-  resetGameFull();
-};
-
-btnModeHard.onclick = () => {
-  currentMode = 'hard';
-  btnModeHard.classList.add('active');
-  btnModeEasy.classList.remove('active');
-  resetGameFull();
-};
-
-// 頂部常駐按鈕
-btnRestart.onclick = resetGameFull;
-
-// 程式開局啟動
-container.classList.add('easy-mode');
-renderCalendarPlate();
-setupSentenceSlots();
+  // 啟動建構
+  buildHundredGrid();
+});
